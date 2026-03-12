@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Deteksi Arus Lalu Lalang Kendaraan</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+html,body{height:100%;background:#0f1115;color:#cbd5e1;}
+body{display:flex;min-height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{
+    width:260px;background:#1a1d23;padding:40px 20px;
+    border-right:1px solid rgba(212,175,55,0.25);
+    display:flex;flex-direction:column;
+}
+.sidebar h1{
+    font-family:'Orbitron',sans-serif;font-size:1.4em;text-align:center;
+    color:#d4af37;margin-bottom:40px;letter-spacing:1px;
+}
+.sidebar button{
+    padding:14px 18px;margin-bottom:12px;background:rgba(255,255,255,0.03);
+    border-radius:10px;cursor:pointer;border:none;color:#94a3b8;
+    font-weight:500;font-size:0.9em;transition:0.3s;
+}
+.sidebar button:hover{
+    background:rgba(212,175,55,0.25);color:#d4af37;transform:translateX(5px);
+}
+.sidebar button.active{
+    background:#d4af37;color:#000;font-weight:600;
+}
+
+/* MAIN */
+.main-wrapper{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.main{flex:1;padding:30px;overflow-y:auto;}
+section{display:none;animation:fadeIn .4s ease;}
+section.active{display:block;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;}}
+
+h2{
+    font-family:'Orbitron',sans-serif;color:#d4af37;font-size:1.5em;
+    margin-bottom:20px;border-bottom:2px solid rgba(212,175,55,0.15);
+    padding-bottom:10px;width:fit-content;
+}
+
+/* FILTER (GLOBAL) */
+.filter-wrapper{
+    background:#1a1d23;
+    border:1px solid rgba(212,175,55,0.25);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:22px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+.filter-title{
+    font-family:'Orbitron',sans-serif;
+    color:#d4af37;
+    letter-spacing:0.5px;
+}
+.filter-group{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.filter-group label{
+    color:#94a3b8;
+    font-size:0.85em;
+}
+.filter-group input[type="date"]{
+    background:#0f1115;
+    border:1px solid rgba(255,255,255,0.12);
+    color:#e2e8f0;
+    padding:8px 10px;
+    border-radius:8px;
+    outline:none;
+}
+.filter-btn{
+    padding:10px 14px;border-radius:8px;border:none;cursor:pointer;
+    font-weight:700;font-size:0.85em;background:#d4af37;color:#000;transition:.3s;
+}
+.filter-btn:hover{opacity:.85;}
+.filter-btn.secondary{
+    background:rgba(255,255,255,0.06);
+    color:#d4af37;
+    border:1px solid rgba(212,175,55,0.35);
+}
+.filter-info{
+    margin-left:auto;
+    color:#94a3b8;
+    font-size:0.85em;
+}
+@media (max-width:768px){
+    .filter-info{flex-basis:100%;margin-left:0;}
+}
+
+/* CCTV GRID */
+.cctv-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+}
+.video-box{
+    background:#1a1d23;border-radius:12px;height:220px;
+    display:flex;justify-content:center;align-items:center;
+    border:1px solid rgba(255,255,255,0.06);
+    font-family:'Orbitron',sans-serif;color:#d4af37;
+    font-size:1.2em;cursor:pointer;position:relative;
+}
+.live-count{
+    position:absolute;bottom:10px;right:10px;
+    background:rgba(212,175,55,0.85);color:#000;padding:6px 10px;
+    border-radius:6px;font-size:0.9em;font-weight:600;
+}
+
+/* EXPORT */
+.export-box{display:flex;gap:12px;margin-bottom:15px;}
+.export-btn{
+    padding:10px 16px;border-radius:8px;border:none;cursor:pointer;
+    font-weight:600;font-size:0.9em;background:#d4af37;color:#000;transition:.3s;
+}
+.export-btn:hover{opacity:.85;}
+
+table{
+    width:100%;border-collapse:collapse;background:#1a1d23;
+    border-radius:12px;overflow:hidden;margin-top:10px;
+}
+table th{
+    background:rgba(212,175,55,0.07);color:#d4af37;padding:14px;
+    text-transform:uppercase;font-size:0.85em;
+}
+table td{
+    padding:13px;text-align:center;color:#e2e8f0;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.empty-row td{
+    padding:18px;
+    color:#94a3b8;
+    font-style:italic;
+    text-align:center;
+}
+
+/* SUMMARY */
+.summary-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+    margin-bottom:25px;
+}
+.summary-card{
+    background:#1a1d23;padding:25px;border-radius:12px;
+    border:1px solid rgba(212,175,55,0.25);
+    text-align:center;
+}
+.summary-card h3{color:#d4af37;font-family:'Orbitron';margin-bottom:10px;}
+.summary-card p{font-size:1.8em;font-weight:600;color:#fff;}
+
+/* HISTORY */
+.history-list{
+    background:#1a1d23;padding:25px;border-radius:12px;
+    border-left:4px solid #d4af37;
+}
+.history-item{
+    padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.history-item:last-child{border:none;}
+.history-desc{font-size:0.95em;color:#e2e8f0;}
+
+footer{
+    background:#1a1d23;padding:15px;text-align:center;
+    color:#d4af37;border-top:1px solid rgba(212,175,55,0.2);
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h1>Menu</h1>
+    <button class="tab-btn active" data-target="dashboard">Dashboard</button>
+    <button class="tab-btn" data-target="data">Data Kendaraan</button>
+    <button class="tab-btn" data-target="riwayat">Riwayat</button>
+</div>
+
+<div class="main-wrapper">
+<div class="main">
+
+    <!-- FILTER TANGGAL (GLOBAL) -->
+    <div class="filter-wrapper">
+        <div class="filter-title">Filter Tanggal</div>
+
+        <div class="filter-group">
+            <label for="filterStart">Mulai</label>
+            <input type="date" id="filterStart">
+        </div>
+
+        <div class="filter-group">
+            <label for="filterEnd">Sampai</label>
+            <input type="date" id="filterEnd">
+        </div>
+
+        <button class="filter-btn" id="applyFilter">Terapkan</button>
+        <button class="filter-btn secondary" id="resetFilter">Reset</button>
+
+        <div class="filter-info" id="filterInfo">Menampilkan semua data</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="active">
+        <h2>Dashboard CCTV</h2>
+        <div class="cctv-grid">
+            <div class="video-box" data-cctv="1">CCTV 1 <div class="live-count" id="cctv1">0</div></div>
+            <div class="video-box" data-cctv="2">CCTV 2 <div class="live-count" id="cctv2">0</div></div>
+            <div class="video-box" data-cctv="3">CCTV 3 <div class="live-count" id="cctv3">0</div></div>
+            <div class="video-box" data-cctv="4">CCTV 4 <div class="live-count" id="cctv4">0</div></div>
+        </div>
+    </section>
+
+    <!-- DATA KENDARAAN -->
+    <section id="data">
+        <h2>Data Kendaraan</h2>
+
+        <div class="export-box">
+            <button class="export-btn">Export Excel</button>
+            <button class="export-btn">Export PDF</button>
+        </div>
+
+        <canvas id="chartData" height="200"></canvas>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Jalan</th>
+                    <th>Tanggal</th>
+                    <th>Jam</th>
+                    <th>Motor</th>
+                    <th>Mobil</th>
+                    <th>Bus</th>
+                    <th>Truk</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="dataBody">
+                <!-- data diisi JS -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- RIWAYAT -->
+    <section id="riwayat">
+        <h2>Riwayat Kendaraan</h2>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Total Kendaraan Tercatat</h3>
+                <p id="totalRiwayat">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Jumlah Lokasi</h3>
+                <p id="lokasiTerpantau">0</p>
+            </div>
+        </div>
+
+        <div class="history-list" id="historyList">
+            <!-- history JS -->
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    © 2026 Dinas Perhubungan Kota Madiun | Sistem Deteksi Arus Lalu Lalang Kendaraan
+</footer>
+</div>
+
+<script>
+// =====================
+// TAB SWITCH
+// =====================
+const tabs = document.querySelectorAll('.tab-btn');
+const sections = document.querySelectorAll('section');
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const target = tab.getAttribute('data-target');
+        sections.forEach(sec => sec.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+
+        // Inisialisasi / resize chart saat tab Data dibuka agar tidak 0px saat sebelumnya hidden
+        if (target === 'data') {
+            if (!chartInitialized) {
+                initChart(filteredData);
+            } else if (chart) {
+                setTimeout(() => chart.resize(), 50);
+            }
+        }
+    });
+});
+
+// =====================
+// DATA KENDARAAN (fokus counting & klasifikasi)
+// =====================
+const dataKendaraan = [
+    {jalan:'Jalan A', tanggal:'2026-01-26', jam:'07:00', motor:15, mobil:10, bus:2, truk:3},
+    {jalan:'Jalan B', tanggal:'2026-01-26', jam:'08:00', motor:12, mobil:8, bus:1, truk:2},
+    {jalan:'Jalan C', tanggal:'2026-01-26', jam:'09:00', motor:10, mobil:5, bus:1, truk:1},
+];
+
+// =====================
+// FILTER TANGGAL (GLOBAL STATE)
+// =====================
+let filteredData = [...dataKendaraan];
+
+const filterStartEl = document.getElementById('filterStart');
+const filterEndEl   = document.getElementById('filterEnd');
+const applyFilterBtn = document.getElementById('applyFilter');
+const resetFilterBtn = document.getElementById('resetFilter');
+const filterInfoEl   = document.getElementById('filterInfo');
+
+function getMinMaxDate(data){
+    if(!data || data.length === 0) return {min:'', max:''};
+    const dates = data.map(d => d.tanggal).filter(Boolean).sort(); // ISO YYYY-MM-DD aman sort string
+    return {min: dates[0] || '', max: dates[dates.length - 1] || ''};
+}
+
+function updateFilterInfo(start, end, count){
+    let rangeText = 'Semua tanggal';
+    if (start && end) rangeText = `${start} s/d ${end}`;
+    else if (start && !end) rangeText = `Mulai ${start}`;
+    else if (!start && end) rangeText = `Sampai ${end}`;
+
+    filterInfoEl.textContent = `Menampilkan ${count} baris • ${rangeText}`;
+}
+
+function applyDateFilter(){
+    let start = filterStartEl.value;
+    let end = filterEndEl.value;
+
+    // Jika user isi terbalik, auto swap biar tetap valid
+    if (start && end && start > end) {
+        const tmp = start;
+        start = end;
+        end = tmp;
+        filterStartEl.value = start;
+        filterEndEl.value = end;
+    }
+
+    filteredData = dataKendaraan.filter(row => {
+        const t = row.tanggal; // diasumsikan format ISO YYYY-MM-DD
+        const okStart = !start || (t >= start);
+        const okEnd   = !end   || (t <= end);
+        return okStart && okEnd;
+    });
+
+    renderTable(filteredData);
+    updateChart(filteredData);
+    renderHistory(filteredData);
+    updateFilterInfo(start, end, filteredData.length);
+}
+
+function resetDateFilter(){
+    const {min, max} = getMinMaxDate(dataKendaraan);
+
+    filterStartEl.value = min;
+    filterEndEl.value = max;
+
+    // optional batasan input biar rapi
+    if (min && max) {
+        filterStartEl.min = min; filterStartEl.max = max;
+        filterEndEl.min = min; filterEndEl.max = max;
+    }
+
+    applyDateFilter();
+}
+
+// Event filter
+applyFilterBtn.addEventListener('click', applyDateFilter);
+resetFilterBtn.addEventListener('click', resetDateFilter);
+
+// Auto apply saat tanggal berubah (biar cepat)
+filterStartEl.addEventListener('change', () => {
+    if (filterEndEl.value && filterStartEl.value && filterStartEl.value > filterEndEl.value) {
+        filterEndEl.value = filterStartEl.value;
+    }
+    applyDateFilter();
+});
+filterEndEl.addEventListener('change', () => {
+    if (filterStartEl.value && filterEndEl.value && filterStartEl.value > filterEndEl.value) {
+        filterStartEl.value = filterEndEl.value;
+    }
+    applyDateFilter();
+});
+
+// =====================
+// RENDER TABLE
+// =====================
+const dataBody = document.getElementById('dataBody');
+
+function renderTable(data){
+    dataBody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'empty-row';
+        tr.innerHTML = `<td colspan="8">Tidak ada data pada rentang tanggal tersebut.</td>`;
+        dataBody.appendChild(tr);
+        return;
+    }
+
+    data.forEach(row => {
+        const total = row.motor + row.mobil + row.bus + row.truk;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.jalan}</td>
+            <td>${row.tanggal}</td>
+            <td>${row.jam}</td>
+            <td>${row.motor}</td>
+            <td>${row.mobil}</td>
+            <td>${row.bus}</td>
+            <td>${row.truk}</td>
+            <td>${total}</td>
+        `;
+        dataBody.appendChild(tr);
+    });
+}
+
+// =====================
+// CHART (init saat tab Data dibuka)
+// =====================
+let chart = null;
+let chartInitialized = false;
+
+function initChart(data){
+    const canvas = document.getElementById('chartData');
+    const ctx = canvas.getContext('2d');
+
+    chart = new Chart(ctx, {
+        type:'bar',
+        data:{
+            labels: (data || []).map(d => d.jam),
+            datasets:[
+                {label:'Motor', data:(data || []).map(d => d.motor), backgroundColor:'#d4af37'},
+                {label:'Mobil', data:(data || []).map(d => d.mobil), backgroundColor:'#94a3b8'},
+                {label:'Bus',   data:(data || []).map(d => d.bus),   backgroundColor:'#f87171'},
+                {label:'Truk',  data:(data || []).map(d => d.truk),  backgroundColor:'#34d399'},
+            ]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{labels:{color:'#cbd5e1'}}
+            },
+            scales:{
+                x:{ticks:{color:'#cbd5e1'}},
+                y:{ticks:{color:'#cbd5e1'}}
+            }
+        }
+    });
+
+    chartInitialized = true;
+}
+
+function updateChart(data){
+    if (!chartInitialized || !chart) return;
+
+    chart.data.labels = (data || []).map(d => d.jam);
+    chart.data.datasets[0].data = (data || []).map(d => d.motor);
+    chart.data.datasets[1].data = (data || []).map(d => d.mobil);
+    chart.data.datasets[2].data = (data || []).map(d => d.bus);
+    chart.data.datasets[3].data = (data || []).map(d => d.truk);
+
+    chart.update();
+}
+
+// =====================
+// LIVE COUNT CCTV (dummy)
+// =====================
+function updateLiveCount(){
+    for(let i=1;i<=4;i++){
+        const count = Math.floor(Math.random()*20)+5; // counting sederhana per menit
+        document.getElementById('cctv'+i).innerText = count;
+    }
+}
+setInterval(updateLiveCount, 5000);
+updateLiveCount();
+
+// =====================
+// RENDER RIWAYAT
+// =====================
+function renderHistory(data){
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+
+    let totalRiwayat = 0;
+    const lokasiSet = new Set();
+
+    if (!data || data.length === 0) {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<div class="history-desc">Tidak ada data pada rentang tanggal tersebut.</div>`;
+        historyList.appendChild(div);
+
+        document.getElementById('totalRiwayat').innerText = 0;
+        document.getElementById('lokasiTerpantau').innerText = 0;
+        return;
+    }
+
+    data.forEach(d => {
+        const total = d.motor + d.mobil + d.bus + d.truk;
+        totalRiwayat += total;
+        lokasiSet.add(d.jalan);
+
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<div class="history-desc">${d.tanggal} • ${d.jalan} • Total ${total} kendaraan</div>`;
+        historyList.appendChild(div);
+    });
+
+    document.getElementById('totalRiwayat').innerText = totalRiwayat;
+    document.getElementById('lokasiTerpantau').innerText = lokasiSet.size;
+}
+
+// =====================
+// INIT
+// =====================
+// Set default filter = min..max tanggal yang ada, lalu render semua (dengan filter aktif)
+resetDateFilter();
+</script>
+
+</body>
+</html>

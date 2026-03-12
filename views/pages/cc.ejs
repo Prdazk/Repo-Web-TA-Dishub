@@ -1,0 +1,217 @@
+<%- include('../partials/header') %>
+
+<style>
+:root {
+  --bg: #0f172a;
+  --panel: #020617;
+  --border: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --orange: #f97316;
+  --orange-soft: rgba(249,115,22,.15);
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #020617, #020617);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system;
+}
+
+/* ===== PAGE ===== */
+.page {
+  padding: 24px;
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--orange);
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ===== SEARCH ===== */
+.search-box {
+  flex: 1;
+  max-width: 320px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  outline: none;
+  transition: .2s;
+}
+
+.search-box input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-soft);
+}
+
+/* ===== GRID ===== */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
+  gap: 18px;
+}
+
+/* ===== CARD ===== */
+.cctv-card {
+  background: linear-gradient(180deg, #020617, #020617);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: .25s;
+}
+
+.cctv-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--orange);
+  box-shadow: 0 15px 40px rgba(249,115,22,.25);
+}
+
+/* ===== THUMB ===== */
+.thumb {
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  background-blend-mode: overlay;
+  background-color: rgba(0,0,0,.35);
+}
+
+/* ===== INFO ===== */
+.info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.location {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ===== BUTTON ===== */
+.open-btn {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #020617;
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration: none;
+  transition: .2s;
+}
+
+.open-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 10px 30px rgba(249,115,22,.45);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+}
+</style>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">📡 CCTV Monitoring</div>
+      <div class="page-subtitle">
+        <%= process.env.SUB_TITLE %>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="Cari ID / lokasi CCTV...">
+    </div>
+  </div>
+
+  <div id="cctvContainer" class="container">
+    <% streams.forEach(stream => { %>
+      <div
+        class="card cctv-card"
+        data-search="<%= stream.id %> <%= stream.lokasi.toLowerCase() %>">
+
+        <div class="thumb"
+          style="background-image:url('/thumb/<%= stream.id %>/latest.jpg?t=<%= Date.now() %>')">
+          CCTV <%= stream.id %>
+        </div>
+
+        <div class="info">
+          <div class="title"><%= stream.lokasi %></div>
+
+          <% if (stream.coordinate) { %>
+            <div class="location">
+              📍 <%= stream.coordinate.lat %>, <%= stream.coordinate.lng %>
+            </div>
+          <% } %>
+
+          <a class="open-btn" href="/monitor/<%= stream.id %>">
+            ▶ Open Monitor
+          </a>
+        </div>
+
+      </div>
+    <% }) %>
+  </div>
+
+</div>
+
+<script>
+const searchInput = document.getElementById("searchInput");
+const cards = document.querySelectorAll(".cctv-card");
+
+searchInput.addEventListener("input", () => {
+  const keyword = searchInput.value.toLowerCase();
+  cards.forEach(card => {
+    card.style.display =
+      card.dataset.search.includes(keyword) ? "flex" : "none";
+  });
+});
+</script>
+
+<%- include('../partials/footer') %>

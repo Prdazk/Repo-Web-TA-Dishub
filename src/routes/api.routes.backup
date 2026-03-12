@@ -1,0 +1,121 @@
+import { Router } from "express";
+import path from "path";
+import fs from "fs";
+
+const router = Router();
+type CctvInfo = {
+  lokasi: string;
+  ws_url: string;
+};
+router.get('/server-health', async (req, res) => {
+    try {
+        const response = await fetch('http://0.0.0.0:6327/');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        res.json({
+            status: 'ok',
+            data: data
+        });
+    } catch (error: any) {
+        console.error('Fetch error:', error);
+        res.status(500).json({
+            status: 'error',
+            error: `Detector not responding server offline, message: ${error.message}`
+        });
+    }
+});
+router.get("/db/list", (req: any, res: any) => {
+  try {
+    // ============================
+    // LOAD TRAFFIC DATA
+    // ============================
+    const trafficPath = path.join(process.cwd(), "db", "traffic.json");
+    const trafficData = JSON.parse(fs.readFileSync(trafficPath, "utf-8"));
+
+    // ============================
+    // LOAD CCTV CONFIG
+    // ============================
+    const cctvPath = path.join(process.cwd(), "config", "cctv.json");
+    const cctvConfig = JSON.parse(fs.readFileSync(cctvPath, "utf-8"));
+
+    const streams = cctvConfig.streams || [];
+
+    // ============================
+    // QUERY PARAMS
+    // ============================
+    const { ids, page = 1, limit = 10 } = req.query;
+
+    const idFilter = ids ? "cctv_" + ids : null;
+
+    // ============================
+    // FILTER TRAFFIC
+    // ============================
+    const filtered = idFilter
+      ? trafficData.filter((d: any) => d.cctv_id === idFilter)
+      : trafficData;
+
+    // ============================
+    // BUAT MAP CCTV
+    // ============================
+
+    const cctvMap = new Map<string, CctvInfo>(
+      streams.map((s: any) => [
+        "cctv_" + s.id,
+        {
+          lokasi: s.lokasi,
+          ws_url: s.ws_url,
+        },
+      ]),
+    );
+
+    // ============================
+    // MERGE + GABUNG LOKASI KE ID
+    // ============================
+    const merged = filtered.map((item: any) => {
+      const cctvInfo = cctvMap.get(item.cctv_id);
+      const lokasi = cctvInfo?.lokasi || "Tidak diketahui";
+
+      return {
+        id: `${item.cctv_id} - ${lokasi}`,
+        date: item.date,
+        hour: item.hour,
+        motorcycle: item.motorcycle,
+        car: item.car,
+        bus: item.bus,
+        truck: item.truck,
+        ws_url: cctvInfo?.ws_url || null,
+      };
+    });
+
+    // ============================
+    // PAGINATION
+    // ============================
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    const startIndex = (pageNumber - 1) * limitNumber;
+    const endIndex = startIndex + limitNumber;
+
+    const paginatedData = merged.slice(startIndex, endIndex);
+
+    // ============================
+    // RESPONSE
+    // ============================
+    res.json({
+      success: true,
+      total: merged.length,
+      page: pageNumber,
+      limit: limitNumber,
+      data: paginatedData,
+    });
+  } catch (e: any) {
+    res.status(500).json({
+      success: false,
+      message: e.message,
+    });
+  }
+});
+
+export default router;

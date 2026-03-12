@@ -1,0 +1,6 @@
+# .env file
+WS_URL_TARGET1="wss://cctv.villabs.id/streamer-jsmpeg/streamer/ikip2"
+WS_URL_TARGET2="wss://cctv.villabs.id/streamer-jsmpeg/streamer/ikip4"
+
+PORT=3000
+MODELS_PATH="./models/konfigurasi.pt"

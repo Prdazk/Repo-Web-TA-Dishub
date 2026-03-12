@@ -1,0 +1,298 @@
+import cv2
+import numpy as np
+import subprocess
+import os
+import sys
+import json
+import time
+import traceback
+import logging
+from datetime import datetime
+from multiprocessing import Process, Lock
+from ultralytics import YOLO
+import threading
+from src.routes.apiSignal import app
+
+# ================= CONFIG =================
+MODEL_PATH = "models/yolov8n.pt"
+DB_PATH = "db/traffic.json"
+
+WIDTH = 480
+HEIGHT = 240
+CONF_TH = 0.40
+FRAME_SKIP = 8
+COUNT_INTERVAL = 7
+MAX_PROC = 2
+
+VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
+# =========================================
+
+db_lock = Lock()
+
+# ========= LOGGING SETUP =========
+os.makedirs("logs", exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[
+        logging.FileHandler("logs/system.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+def log(cid, level, message):
+    msg = f"[{cid}] {message}"
+    if level == "info":
+        logging.info(msg)
+    elif level == "error":
+        logging.error(msg)
+    elif level == "warning":
+        logging.warning(msg)
+    else:
+        logging.debug(msg)
+
+
+# ========= LOAD YOLO =========
+def load_yolo():
+    logging.info("Loading YOLO model...")
+    model = YOLO(MODEL_PATH)
+    model.fuse()
+    logging.info("YOLO loaded successfully")
+    return model
+
+
+# ========= DRAW BOX =========
+COLORS = {
+    "car": ((255, 100, 0), (200, 70, 0)),
+    "motorcycle": ((0, 200, 255), (0, 160, 200)),
+    "bus": ((0, 0, 255), (0, 0, 180)),
+    "truck": ((180, 0, 255), (140, 0, 200)),
+}
+
+def draw_modern_box(frame, x1, y1, x2, y2, label, conf):
+    box_color, bg_color = COLORS.get(
+        label, ((200, 200, 200), (120, 120, 120))
+    )
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    padding = 4
+
+    cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
+
+    text = f"{label} {conf:.2f}"
+    (tw, th), _ = cv2.getTextSize(text, font, 0.45, 1)
+
+    bg_y1 = y1 - th - padding * 2
+    bg_y2 = y1
+
+    if bg_y1 < 0:
+        bg_y1 = y1
+        bg_y2 = y1 + th + padding * 2
+
+    cv2.rectangle(frame, (x1, bg_y1),
+                  (x1 + tw + padding * 2, bg_y2),
+                  bg_color, -1)
+
+    cv2.putText(frame, text,
+                (x1 + padding, bg_y2 - padding),
+                font, 0.45,
+                (255, 255, 255),
+                1, cv2.LINE_AA)
+
+
+# ========= DB =========
+def load_db():
+    if not os.path.exists(DB_PATH):
+        return []
+    try:
+        with open(DB_PATH, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        logging.error(f"DB read error: {e}")
+        return []
+
+
+def save_db(db):
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    with open(DB_PATH, "w") as f:
+        json.dump(db, f, indent=2)
+
+
+def update_traffic_db(cctv_id, counts):
+    now = datetime.now()
+
+    row = {
+        "cctv_id": cctv_id,
+        "date": now.strftime("%Y-%m-%d"),
+        "hour": now.strftime("%H"),
+        "samples": 1,
+        "car": counts.get("car", 0),
+        "motorcycle": counts.get("motorcycle", 0),
+        "bus": counts.get("bus", 0),
+        "truck": counts.get("truck", 0)
+    }
+
+    with db_lock:
+        db = load_db()
+        found = False
+
+        for r in db:
+            if (
+                r["cctv_id"] == row["cctv_id"]
+                and r["date"] == row["date"]
+                and r["hour"] == row["hour"]
+            ):
+                r["samples"] += 1
+                for k in VEHICLE_CLASSES:
+                    r[k] += row[k]
+                found = True
+                break
+
+        if not found:
+            db.append(row)
+
+        save_db(db)
+
+
+# ========= CCTV PROCESS =========
+def run_cctv(cctv_id, hls_url):
+    try:
+        log(cctv_id, "info", "Starting CCTV process")
+        model = load_yolo()
+
+        out_dir = f"output/{cctv_id}"
+        os.makedirs(out_dir, exist_ok=True)
+        out_hls = os.path.join(out_dir, "output.m3u8")
+
+        frame_size = WIDTH * HEIGHT * 3
+        last_count_time = time.time()
+
+        ffmpeg_in = [
+            "ffmpeg", "-threads", "1",
+            "-loglevel", "error",
+            "-fflags", "nobuffer",
+            "-flags", "low_delay",
+            "-i", hls_url,
+            "-vf", f"scale={WIDTH}:{HEIGHT}",
+            "-pix_fmt", "bgr24",
+            "-f", "rawvideo", "-"
+        ]
+
+        ffmpeg_out = [
+            "ffmpeg", "-y",
+            "-loglevel", "error",
+            "-f", "rawvideo",
+            "-pix_fmt", "bgr24",
+            "-s", f"{WIDTH}x{HEIGHT}",
+            "-r", "12",
+            "-i", "-",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-tune", "zerolatency",
+            "-g", "24",
+            "-sc_threshold", "0",
+            "-f", "hls",
+            "-hls_time", "1",
+            "-hls_list_size", "5",
+            "-hls_flags", "delete_segments+independent_segments",
+            out_hls
+        ]
+
+        while True:
+            try:
+                log(cctv_id, "info", "CONNECTING to stream...")
+                pipe_in = subprocess.Popen(ffmpeg_in, stdout=subprocess.PIPE)
+                pipe_out = subprocess.Popen(ffmpeg_out, stdin=subprocess.PIPE)
+                log(cctv_id, "info", "CONNECTED")
+
+                frame_id = 0
+                last_boxes = []
+
+                while True:
+                    raw = pipe_in.stdout.read(frame_size)
+                    if not raw or len(raw) != frame_size:
+                        raise RuntimeError("Stream lost")
+
+                    frame = np.frombuffer(raw, np.uint8).reshape(
+                        (HEIGHT, WIDTH, 3)
+                    ).copy()
+
+                    frame_id += 1
+
+                    if frame_id % FRAME_SKIP == 0:
+                        results = model.predict(
+                            frame,
+                            imgsz=256,
+                            conf=CONF_TH,
+                            device="cpu",
+                            verbose=False
+                        )[0]
+
+                        last_boxes.clear()
+                        counts = {k: 0 for k in VEHICLE_CLASSES}
+
+                        for box in results.boxes:
+                            cls_id = int(box.cls[0])
+                            label = model.names[cls_id]
+
+                            if label not in VEHICLE_CLASSES:
+                                continue
+
+                            x1, y1, x2, y2 = map(int, box.xyxy[0])
+                            conf = float(box.conf[0])
+
+                            last_boxes.append((x1, y1, x2, y2, label, conf))
+                            counts[label] += 1
+
+                        if time.time() - last_count_time >= COUNT_INTERVAL:
+                            update_traffic_db(cctv_id, counts)
+                            last_count_time = time.time()
+
+                    for x1, y1, x2, y2, label, conf in last_boxes:
+                        draw_modern_box(frame, x1, y1, x2, y2, label, conf)
+
+                    pipe_out.stdin.write(frame.tobytes())
+
+            except Exception as e:
+                log(cctv_id, "error", f"STREAM ERROR: {str(e)}")
+                log(cctv_id, "error", traceback.format_exc())
+                log(cctv_id, "warning", "RECONNECTING in 3 seconds...")
+                time.sleep(3)
+
+    except Exception as e:
+        log(cctv_id, "error", f"FATAL ERROR: {str(e)}")
+        log(cctv_id, "error", traceback.format_exc())
+
+
+# ========= MAIN =========
+def run_flask():
+    logging.info("Starting Flask API on port 6327")
+    app.run(
+        host="0.0.0.0",
+        port=6327,
+        debug=False,
+        use_reloader=False
+    )
+
+
+if __name__ == "__main__":
+    logging.info("System starting...")
+
+    with open("config/videos.json") as f:
+        cctvs = json.load(f)
+
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    processes = []
+
+    for cam in cctvs[:MAX_PROC]:
+        p = Process(
+            target=run_cctv,
+            args=(cam["id"], cam["hls"])
+        )
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()

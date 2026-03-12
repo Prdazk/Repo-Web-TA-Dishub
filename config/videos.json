@@ -1,0 +1,10 @@
+[
+  {
+    "id": "cctv_1",
+    "hls": "http://localhost:3000/hls/1/output.m3u8"
+  },
+  {
+    "id": "cctv_2",
+    "hls": "http://localhost:3000/hls/2/output.m3u8"
+  }
+]

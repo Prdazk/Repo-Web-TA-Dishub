@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCTV Monitor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@500&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <link href="/styles/monitor.css" rel="stylesheet" />
+  <link rel="icon" href="../../logo.png" />
+</head>
+
+<body>
+  <div class="top-nav">
+    <button class="back-btn" onclick="goBack()">← Kembali</button>
+    <div class="nav-title">CCTV MONITOR</div>
+  </div>
+
+  <template id="video-template">
+    <div class="card video-card">
+      <div class="video-wrapper">
+        <div class="overlay">Connecting…</div>
+        <video autoplay muted playsinline></video>
+      </div>
+      <div class="controls">
+        <button class="btn zoom-in">
+          <i class="fa fa-search-plus" aria-hidden="true"></i> Zoom
+        </button>
+        <button class="btn zoom-out">
+          <i class="fa fa-search-minus" aria-hidden="true"></i> Zoom
+        </button>
+        <button class="btn reset">Reset</button>
+        <button class="btn fullscreen">
+          <i class="fa fa-arrows-alt" aria-hidden="true"></i> Fullscreen
+        </button>
+        <strong class="label"></strong>
+      </div>
+    </div>
+  </template>
+
+  <div class="app"></div>
+
+  <div class="info">
+    <div class="info-item">
+      <div class="info-title">
+        <i class="fa fa-map-marker" aria-hidden="true"></i> | Lokasi
+      </div>
+      <div class="info-value">
+        <%= stream.lokasi %>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-title">
+        <i class="fa fa-sort-amount-desc" aria-hidden="true"></i> | Stream
+      </div>
+      <div class="info-value" id="message-health">HLS m3u8</div>
+    </div>
+  </div>
+
+  <script>
+    function goBack() {
+      if (history.length > 1) history.back();
+      else location.href = "/";
+    }
+
+    monitor();
+
+    async function monitor(SHOW_RAW_STREAM = false) {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const raw = urlParams.get("raw");
+      const app = document.querySelector(".app");
+      const template = document.getElementById("video-template");
+
+      const videoConfigs = [
+        { label: "YOLO", url: "<%= hls_o %>" },
+        ...(SHOW_RAW_STREAM || raw
+          ? [{ label: "Raw Stream", url: "<%= hls %>" }]
+          : []),
+      ];
+
+      const players = [];
+
+      videoConfigs.forEach((config, i) => {
+        const clone = template.content.cloneNode(true);
+
+        const video = clone.querySelector("video");
+        const overlay = clone.querySelector(".overlay");
+        const label = clone.querySelector(".label");
+
+        video.id = "video" + i;
+        overlay.id = "overlay" + i;
+        label.innerText = config.label;
+
+        clone.querySelector(".zoom-in").onclick = () => players[i].zoomIn();
+        clone.querySelector(".zoom-out").onclick = () => players[i].zoomOut();
+        clone.querySelector(".reset").onclick = () => players[i].reset();
+        clone.querySelector(".fullscreen").onclick = () =>
+          players[i].fullscreen();
+
+        app.appendChild(clone);
+
+        players.push(createPlayer({ video, overlay, url: config.url }));
+      });
+      const rs = await fetch(`/api/server-health`);
+      const js = await rs.json();
+      if (js.status == "error") { document.getElementById("message-health").innerText = js.error }
+    }
+
+    function createPlayer({ video, overlay, url }) {
+      let scale = 1,
+        x = 0,
+        y = 0,
+        drag = false,
+        sx = 0,
+        sy = 0;
+      let hls = null,
+        lastTime = 0;
+
+      const apply = () =>
+        (video.style.transform = `translate(${x}px,${y}px) scale(${scale})`);
+
+      function init() {
+        overlay.style.display = "flex";
+        overlay.innerText = "Connecting…";
+
+        if (hls) {
+          hls.destroy();
+          hls = null;
+        }
+
+        if (Hls.isSupported()) {
+          hls = new Hls({ lowLatencyMode: true });
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            overlay.style.display = "none";
+            video.play().catch(() => { });
+          });
+          hls.on(Hls.Events.ERROR, (_, d) => {
+            if (d.fatal) {
+              overlay.innerText = "Reconnecting…";
+              setTimeout(init, 1500);
+            }
+          });
+        } else {
+          video.src = url;
+        }
+      }
+
+      setInterval(() => {
+        if (!video.paused) {
+          if (video.currentTime === lastTime) init();
+          lastTime = video.currentTime;
+        }
+      }, 5000);
+
+      video.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          scale += e.deltaY > 0 ? -0.2 : 0.2;
+          scale = Math.max(1, Math.min(scale, 5));
+          if (scale === 1) x = y = 0;
+          apply();
+        },
+        { passive: false },
+      );
+
+      const p = (e) => (e.touches ? e.touches[0] : e);
+      video.addEventListener("mousedown", (e) => {
+        if (scale <= 1) return;
+        drag = true;
+        const d = p(e);
+        sx = d.clientX - x;
+        sy = d.clientY - y;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!drag) return;
+        const d = p(e);
+        x = d.clientX - sx;
+        y = d.clientY - sy;
+        apply();
+      });
+      window.addEventListener("mouseup", () => (drag = false));
+
+      video.addEventListener(
+        "touchstart",
+        (e) => {
+          if (scale <= 1) return;
+          drag = true;
+          const d = p(e);
+          sx = d.clientX - x;
+          sy = d.clientY - y;
+        },
+        { passive: false },
+      );
+      video.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!drag) return;
+          e.preventDefault();
+          const d = p(e);
+          x = d.clientX - sx;
+          y = d.clientY - sy;
+          apply();
+        },
+        { passive: false },
+      );
+      video.addEventListener("touchend", () => (drag = false));
+
+      init();
+
+      return {
+        zoomIn() {
+          scale = Math.min(scale + 0.2, 5);
+          apply();
+        },
+        zoomOut() {
+          scale = Math.max(scale - 0.2, 1);
+          if (scale === 1) x = y = 0;
+          apply();
+        },
+        reset() {
+        scale = 1;
+        x = 0;
+        y = 0;
+        apply();
+
+        // refresh stream
+        init();
+        },
+        fullscreen() {
+          video.requestFullscreen?.();
+        },
+      };
+    }
+  </script>
+</body>
+
+</html>

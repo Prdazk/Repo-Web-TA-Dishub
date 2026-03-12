@@ -1,0 +1,14 @@
+{
+    "streams": [
+        {
+            "id": "1",
+            "lokasi": "Simpang 4 Rejoagung - Jln. Ring Road Utara",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/rejoagung1"
+        },
+        {
+            "id": "2",
+            "lokasi": "Simpang 4 Sleko - Jln. Musi",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/seleko4"
+        }
+    ]
+}

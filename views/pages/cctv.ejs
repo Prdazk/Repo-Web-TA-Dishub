@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= process.env.TITLE_WEB || title %>
+    </title>
+    <link rel="icon" href="../../logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link href="/styles/main.rell.css" rel="stylesheet">
+    <script src="/js/jquery-4.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css" />
+    <script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa fa-bars" aria-hidden="true"></i></button>
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar">
+        <div style="text-align:center;margin-bottom:20px;">
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#10b981;">
+                Web <span style="color:#fff;">Monitoring</span>
+            </h1>
+            <div style="font-size:12px;color:#cbd5f5;margin-top:4px;">
+                <%= process.env.SUB_TITLE %>
+            </div>
+        </div>
+
+        <button class="tab-btn active" data-target="dashboard"><i class="fa fa-tachometer" aria-hidden="true"></i> |
+            Dashboard</button>
+        <button class="tab-btn" data-target="kendaraan"><i class="fa fa-table" aria-hidden="true"></i> | Data
+            Kendaraan</button>
+        <button class="tab-btn" data-target="riwayat"><i class="fa fa-bar-chart" aria-hidden="true"></i> | Riwayat
+        </button>
+    </div>
+
+    <div class="main-wrapper">
+
+        <section id="dashboard" class="active">
+            <h2>Dashboard CCTV</h2>
+            <p id="message-health"></p>
+
+            <div class="cctv-grid">
+                <% streams.forEach(s=> { %>
+                    <div class="video-box" onclick="openMonitor('<%= s.id %>')">
+                        <div class="video-thumb"
+                            style="background-image:url('/thumb/<%= s.id %>/latest.jpg');background-size:cover"></div>
+                        <div>
+                            <%= s.lokasi %>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+
+            <div class="dashboard-summary">
+                <h2 style="margin-top:50px;"></h2>
+
+                <div class="summary-grid">
+                    <div class="card">
+                        <span>Total Kendaraan Hari Ini</span>
+                        <h3 id="totalRiwayat">0</h3>
+                    </div>
+                    <div class="card">
+                        <span>Lokasi Terpantau</span>
+                        <h3 id="totalLokasi"><%= streams.length %></h3>
+                    </div>
+                </div>
+
+                <div class="summary-small">
+                    <div class="card">
+                        <span>Jam Arus Tertinggi</span>
+                        <h3 id="jamTertinggi">-</h3>
+                        <small id="labelJamTertinggi" style="color:#9ca3af;font-size:11px;"></small>
+                    </div>
+                    <div class="card">
+                        <span>Jam Arus Rata Rata</span>
+                        <h3 id="jamMenengah">-</h3>
+                        <small id="labelJamMenengah" style="color:#9ca3af;font-size:11px;"></small>
+                    </div>
+                    <div class="card">
+                        <span>Jam Arus Terendah</span>
+                        <h3 id="jamTerendah">-</h3>
+                        <small id="labelJamTerendah" style="color:#9ca3af;font-size:11px;"></small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="kendaraan">
+            <h2>Data Kendaraan</h2>
+
+            <!-- Modal Export Excel -->
+                <div id="modalExcel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                    <div style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <h3 style="margin:0 0 8px;color:#166534;font-size:18px;">📊 Export Excel</h3>
+                        <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
+                        <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
+                        <input type="date" id="excelTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;">
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="closeExcelModal()" style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
+                            <button onclick="doExportExcel()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Export</button>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Modal Export PDF -->
+                <div id="modalPDF" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                    <div style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;">📄 Export PDF</h3>
+                        <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
+                        <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
+                        <input type="date" id="pdfTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;">
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="closePDFModal()" style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
+                            <button onclick="doExportPDF()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Export</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Filter Tanggal -->
+                <div id="modalFilter" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                    <div style="background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                            <span style="font-size:22px;">📅</span>
+                            <h3 style="margin:0;color:#1e3a5f;font-size:18px;">Filter Tanggal</h3>
+                        </div>
+                        <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">Pilih rentang tanggal data yang ingin ditampilkan</p>
+
+                        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                            <div>
+                                <label style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Dari Tanggal</label>
+                                <input type="date" id="startDate" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none;transition:border 0.2s;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#d1d5db'">
+                            </div>
+                            <div>
+                                <label style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Sampai Tanggal</label>
+                                <input type="date" id="endDate" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none;transition:border 0.2s;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#d1d5db'">
+                            </div>
+                        </div>
+
+                        <!-- Shortcut tombol cepat -->
+                        <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+                            <button onclick="setFilterShortcut('today')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Hari Ini</button>
+                            <button onclick="setFilterShortcut('yesterday')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Kemarin</button>
+                            <button onclick="setFilterShortcut('week')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">7 Hari</button>
+                            <button onclick="setFilterShortcut('month')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Bulan Ini</button>
+                        </div>
+
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="closeFilterModal()" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
+                            <button onclick="applyFilter()" style="flex:2;padding:11px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Terapkan Filter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <div class="export-group">
+                        <button class="btn-excel" onclick="exportExcel()">
+                            <i class="fa fa-file-excel"></i> Export Excel
+                        </button>
+
+                        <button class="btn-pdf" onclick="exportPDF()">
+                            <i class="fa fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+
+               <div class="filter-group">
+                    <button class="btn-filter" onclick="openFilterModal()">
+                        <i class="fa fa-calendar"></i> Filter Tanggal
+                    </button>
+                    <button class="btn-reset" id="btnResetFilter" onclick="resetFilter()" style="display:none;">
+                        <i class="fa fa-times"></i> Reset
+                    </button>
+                    <span id="labelFilterAktif" style="font-size:13px;color:#10b981;font-weight:600;"></span>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="max-height: 470px; overflow-y: auto;">
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th>CCTV</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Motor</th>
+                            <th>Mobil</th>
+                            <th>Bus</th>
+                            <th>Truk</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableKendaraan"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+            <br />
+        </section>
+
+        <section id="riwayat">
+            <h2>Riwayat & Analisis Arus</h2>
+
+            <div class="riwayat-wrapper">
+                <div style="margin-top:30px;background:#fff;padding:20px;border-radius:16px;">
+                    <canvas id="arusChart" height="100"></canvas>
+                </div>
+
+                <!-- Filter riwayat -->
+                <div class="filter-group" style="margin:20px 0;">
+                    <button class="btn-filter" onclick="openRiwayatFilterModal()">
+                        <i class="fa fa-calendar"></i> Filter Tanggal
+                    </button>
+                    <button class="btn-reset" id="btnResetRiwayat" onclick="resetRiwayatFilter()" style="display:none;">
+                        <i class="fa fa-times"></i> Reset
+                    </button>
+                    <span id="labelRiwayatAktif" style="font-size:13px;color:#10b981;font-weight:600;"></span>
+                </div>
+
+                <!-- Modal Filter Riwayat -->
+                <div id="modalRiwayatFilter" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                    <div style="background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                            <span style="font-size:22px;">📊</span>
+                            <h3 style="margin:0;color:#1e3a5f;font-size:18px;">Filter Riwayat</h3>
+                        </div>
+                        <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">Pilih rentang tanggal riwayat yang ingin ditampilkan</p>
+
+                        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                            <div>
+                                <label style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Dari Tanggal</label>
+                                <input type="date" id="riwayatStartDate" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none;transition:border 0.2s;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#d1d5db'">
+                            </div>
+                            <div>
+                                <label style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Sampai Tanggal</label>
+                                <input type="date" id="riwayatEndDate" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none;transition:border 0.2s;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#d1d5db'">
+                            </div>
+                        </div>
+
+                        <!-- Shortcut -->
+                        <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+                            <button onclick="setRiwayatShortcut('today')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Hari Ini</button>
+                            <button onclick="setRiwayatShortcut('yesterday')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Kemarin</button>
+                            <button onclick="setRiwayatShortcut('week')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">7 Hari</button>
+                            <button onclick="setRiwayatShortcut('month')" style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:12px;cursor:pointer;">Bulan Ini</button>
+                        </div>
+
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="closeRiwayatFilterModal()" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
+                            <button onclick="applyRiwayatFilter()" style="flex:2;padding:11px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Terapkan Filter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="riwayat-list" id="listRiwayat"></div>
+                <div class="pagination" id="paginationRiwayat"></div>
+                <br/>
+            </div>
+        </section>
+
+        <footer>
+            <%= process.env.FOOTER %>
+        </footer>
+    </div>
+
+    <script>
+        let arusChartInstance = null;
+        let lastData = []; // menyimpan data asli dari API
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = () => {
+                const target = btn.dataset.target;
+
+                localStorage.setItem("activeTab", target);
+
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+            }
+        });
+
+        function openMonitor(id) {
+            location.href = '/monitor/' + id;
+        }
+
+        // ====== FILTER TANGGAL (MODAL) ======
+        function openFilterModal() {
+            const s = localStorage.getItem("filterStartDate") || "";
+            const e = localStorage.getItem("filterEndDate") || "";
+            document.getElementById("startDate").value = s;
+            document.getElementById("endDate").value = e;
+            document.getElementById("modalFilter").style.display = "flex";
+        }
+
+        function closeFilterModal() {
+            document.getElementById("modalFilter").style.display = "none";
+        }
+
+        function setFilterShortcut(type) {
+            const today = new Date();
+            const fmt = d => d.toISOString().split('T')[0];
+            if (type === 'today') {
+                document.getElementById("startDate").value = fmt(today);
+                document.getElementById("endDate").value = fmt(today);
+            } else if (type === 'yesterday') {
+                const y = new Date(today); y.setDate(y.getDate() - 1);
+                document.getElementById("startDate").value = fmt(y);
+                document.getElementById("endDate").value = fmt(y);
+            } else if (type === 'week') {
+                const w = new Date(today); w.setDate(w.getDate() - 6);
+                document.getElementById("startDate").value = fmt(w);
+                document.getElementById("endDate").value = fmt(today);
+            } else if (type === 'month') {
+                const m = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById("startDate").value = fmt(m);
+                document.getElementById("endDate").value = fmt(today);
+            }
+        }
+
+        function applyFilter() {
+            const start = document.getElementById("startDate").value;
+            const end = document.getElementById("endDate").value;
+
+            if (start && end && start > end) {
+                alert("Tanggal mulai tidak boleh lebih besar dari tanggal akhir.");
+                return;
+            }
+
+            localStorage.setItem("filterStartDate", start || "");
+            localStorage.setItem("filterEndDate", end || "");
+
+            const label = document.getElementById("labelFilterAktif");
+            const resetBtn = document.getElementById("btnResetFilter");
+            if (start || end) {
+                label.innerText = start && end ? `${formatTanggal(start)} → ${formatTanggal(end)}`
+                                : start ? `Dari ${formatTanggal(start)}`
+                                : `Sampai ${formatTanggal(end)}`;
+                resetBtn.style.display = "inline-block";
+            } else {
+                label.innerText = "";
+                resetBtn.style.display = "none";
+            }
+
+            closeFilterModal();
+            currentPage = 1;
+            localStorage.setItem("currentPage", "1");
+            loadKendaraan();
+        }
+
+        function resetFilter() {
+            document.getElementById("startDate").value = "";
+            document.getElementById("endDate").value = "";
+            localStorage.removeItem("filterStartDate");
+            localStorage.removeItem("filterEndDate");
+            document.getElementById("labelFilterAktif").innerText = "";
+            document.getElementById("btnResetFilter").style.display = "none";
+            currentPage = 1;
+            localStorage.setItem("currentPage", "1");
+            loadKendaraan();
+        }
+
+        const tableK = document.getElementById('tableKendaraan');
+        const listR = document.getElementById('listRiwayat');
+
+        let cctv = "<%= streams.map(s => s.id).join(',') %>";
+        let currentPage = 1;
+        const limit = 10;
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        const pagination = document.getElementById('pagination');
+        
+
+        const savedTab = localStorage.getItem("activeTab");
+        if (savedTab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+
+            const activeBtn = document.querySelector(`.tab-btn[data-target="${savedTab}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const activeSection = document.getElementById(savedTab);
+            if (activeSection) activeSection.classList.add('active');
+        }
+
+        const savedPage = localStorage.getItem("currentPage");
+        if (savedPage) {
+            const p = parseInt(savedPage, 10);
+            if (!isNaN(p) && p > 0) currentPage = p;
+        }
+
+        // Restore filter tanggal dari localStorage
+        const savedStart = localStorage.getItem("filterStartDate") || "";
+        const savedEnd = localStorage.getItem("filterEndDate") || "";
+        if (savedStart || savedEnd) {
+            const label = document.getElementById("labelFilterAktif");
+            const resetBtn = document.getElementById("btnResetFilter");
+            if (label) {
+                label.innerText = savedStart && savedEnd
+                    ? `${formatTanggal(savedStart)} → ${formatTanggal(savedEnd)}`
+                    : savedStart ? `Dari ${formatTanggal(savedStart)}`
+                    : `Sampai ${formatTanggal(savedEnd)}`;
+            }
+            if (resetBtn) resetBtn.style.display = "inline-block";
+        }
+
+        function buildListUrl() {
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("page", String(currentPage));
+            params.set("limit", String(limit));
+
+            // kirim filter kalau ada
+            if (startDate) params.set("startDate", startDate);
+            if (endDate) params.set("endDate", endDate);
+
+            return `/api/db/list?${params.toString()}`;
+        }
+
+        async function loadKendaraan() {
+            try {
+                // clear pesan (nanti diisi lagi kalau ada error)
+                document.getElementById("message-health").innerText = "";
+
+                const url = buildListUrl();
+                const r = await fetch(url);
+                const j = await r.json();
+                lastData = j.data || [];
+
+                const rs = await fetch(`/api/server-health`);
+                const js = await rs.json();
+                if (js.status == "error") {
+                    document.getElementById("message-health").innerText = js.error;
+                }
+
+                tableK.innerHTML = '';
+                pagination.innerHTML = '';
+
+                let totalData = j.total || 0;
+                let totalPage = Math.ceil(totalData / limit);
+
+                let totalSemua = 0;
+                let lokasiSet = new Set();
+                let jamMap = {};
+                let dateMap = {}; // ← tambah ini
+
+                (j.data || []).forEach(d => {
+                    const total = d.motorcycle + d.car + d.bus + d.truck;
+
+                    totalSemua += total;
+                    lokasiSet.add(d.id);
+ 
+                    const jamKey = parseInt(d.hour, 10);
+                        if (!jamMap[jamKey]) {
+                            jamMap[jamKey] = 0;
+                        }
+                        jamMap[jamKey] += total;
+
+                    // ← tambah ini
+                    if (!dateMap[d.date]) {
+                        dateMap[d.date] = 0;
+                    }
+                    dateMap[d.date] += total;
+
+                    tableK.innerHTML += `
+                        <tr>
+                            <td>${d.id}</td>
+                            <td>${d.date}</td>
+                            <td>${d.hour}:00</td>
+                            <td><i class="fa fa-motorcycle"></i> ${d.motorcycle}</td>
+                            <td><i class="fa fa-car"></i> ${d.car}</td>
+                            <td><i class="fa fa-bus"></i> ${d.bus}</td>
+                            <td><i class="fa fa-truck"></i> ${d.truck}</td>
+                            <td><strong>${total}</strong></td>
+                        </tr>`;
+                });
+
+                // if (dataTableInstance) {
+                //     dataTableInstance.destroy();
+                // }
+
+                // dataTableInstance = new DataTable('#myTable', {
+                //     responsive: true,
+                //     paging: false,
+                //     info: false,
+                //     searching: false
+                // });
+
+                renderPagination(totalPage);
+
+                const today = new Date().toISOString().split('T')[0];
+                const summaryParams = new URLSearchParams();
+                summaryParams.set("ids", cctv);
+                summaryParams.set("startDate", today);
+                summaryParams.set("endDate", today);
+                const rSummary = await fetch(`/api/db/summary?${summaryParams.toString()}`);
+                const jSummary = await rSummary.json();
+
+                // Jam arus hari ini
+                const rJam = await fetch(`/api/db/jam-arus?${summaryParams.toString()}`);
+                const jJam = await rJam.json();
+                let jamMapDB = {};
+                (jJam.data || []).forEach(row => {
+                    jamMapDB[parseInt(row.hour, 10)] = row.total;
+                });
+
+                // Kalau hari ini kurang dari 2 jam, fallback ke kemarin
+                let jamLabel = "hari ini";
+                if (Object.keys(jamMapDB).length < 2) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yDate = yesterday.toISOString().split('T')[0];
+
+                    const yParams = new URLSearchParams();
+                    yParams.set("ids", cctv);
+                    yParams.set("startDate", yDate);
+                    yParams.set("endDate", yDate);
+
+                    const rJamY = await fetch(`/api/db/jam-arus?${yParams.toString()}`);
+                    const jJamY = await rJamY.json();
+
+                    if (jJamY.data && jJamY.data.length >= 2) {
+                        jamMapDB = {};
+                        jJamY.data.forEach(row => {
+                            jamMapDB[parseInt(row.hour, 10)] = row.total;
+                        });
+                        jamLabel = "data kemarin";
+                    }
+                }
+
+                // Tampilkan label di card
+                ["labelJamTertinggi","labelJamMenengah","labelJamTerendah"].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = jamLabel === "data kemarin" ? "📅 Menampilkan data kemarin" : "";
+                });
+
+                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamMapDB, dateMap);
+ 
+            } catch (e) {
+                console.error(e);
+                document.getElementById("message-health").innerText =
+                    "Terjadi error saat memuat data. Cek console / API.";
+            }
+        }
+
+        function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamMap, dateMap) {
+
+            document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
+            document.getElementById("totalLokasi").innerText = lokasiSet.size;
+
+            let jamArray = Object.entries(jamMap)
+                .map(([jam, total]) => ({ jam: parseInt(jam, 10), total }))
+                .sort((a, b) => a.jam - b.jam);
+
+            if (jamArray.length > 0) {
+
+                    let sortedByTotal = [...jamArray].sort((a, b) => b.total - a.total);
+
+                    const tertinggi = sortedByTotal[0];
+                    document.getElementById("jamTertinggi").innerText =
+                        String(tertinggi.jam).padStart(2, '0') + ":00 (" + tertinggi.total.toLocaleString('id-ID') + ")";
+
+                    const terendah = sortedByTotal[sortedByTotal.length - 1];
+                    document.getElementById("jamTerendah").innerText =
+                        String(terendah.jam).padStart(2, '0') + ":00 (" + terendah.total.toLocaleString('id-ID') + ")";
+
+                    const totalKeseluruhan = jamArray.reduce((sum, j) => sum + j.total, 0);
+                    const rataRata = totalKeseluruhan / jamArray.length;
+
+                    const jamRataRata = jamArray.reduce((closest, j) =>
+                        Math.abs(j.total - rataRata) < Math.abs(closest.total - rataRata) ? j : closest
+                    );
+  
+                    document.getElementById("jamMenengah").innerText =
+                        String(jamRataRata.jam).padStart(2, '0') + ":00 (" + Math.round(rataRata).toLocaleString('id-ID') + ")";
+                }
+
+            const ctx = document.getElementById('arusChart').getContext('2d');
+
+            if (arusChartInstance) {
+                arusChartInstance.destroy();
+            }
+
+            arusChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: jamArray.map(j => j.jam + ":00"),
+                    datasets: [{
+                        label: 'Total Kendaraan',
+                        data: jamArray.map(j => j.total),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+                // Urutkan tanggal dari terlama ke terbaru
+                let dateArray = Object.entries(dateMap)
+                    .map(([tgl, total]) => ({ tgl, total }))
+                    .sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
+
+                // Kelompokkan data per tanggal + per lokasi CCTV dari data asli
+                let dateLokasiMap = {};
+                lastData.forEach(row => {
+                    const key = row.date;
+                    if (!dateLokasiMap[key]) dateLokasiMap[key] = {};
+                    if (!dateLokasiMap[key][row.id]) dateLokasiMap[key][row.id] = 0;
+                    dateLokasiMap[key][row.id] += row.motorcycle + row.car + row.bus + row.truck;
+                });
+
+                listR.innerHTML = dateArray.map(d => {
+                    const lokasiHari = dateLokasiMap[d.tgl] || {};
+                    const lokasiEntries = Object.entries(lokasiHari);
+
+                    // Buat baris per CCTV dalam 1 tanggal
+                    const lokasiRows = lokasiEntries.map(([id, totalLokasi]) => `
+                        <div style="
+                            display:flex;
+                            align-items:center;
+                            gap:10px;
+                            padding:12px 18px;
+                            margin-bottom:8px;
+                            background:#f9fafb;
+                            border-left:4px solid #10b981;
+                            border-radius:8px;
+                            font-size:14px;
+                            color:#374151;
+                            box-shadow:0 1px 3px rgba(0,0,0,0.07);
+                        ">
+                            <span style="font-weight:600;color:#111827;min-width:150px;">
+                                📅 ${formatTanggal(d.tgl)}
+                            </span>
+                            <span style="color:#9ca3af;">•</span>
+                            <span style="color:#374151;flex:1;">
+                                📍 ${id}
+                            </span>
+                            <span style="color:#9ca3af;">•</span>
+                            <span style="font-weight:700;color:#10b981;">
+                                Total ${totalLokasi.toLocaleString('id-ID')} Kendaraan
+                            </span>
+                        </div>
+                    `).join('');
+
+                    return lokasiRows;
+                }).join('');
+        }
+
+       function renderPagination(totalPage) {
+            pagination.innerHTML = '';
+            if (totalPage <= 1) return;
+
+            pagination.dataset.totalPage = totalPage;
+
+            const maxBtn = 10; // tampilkan max 10 tombol halaman
+            let startPage = Math.max(1, currentPage - 4);
+            let endPage = Math.min(totalPage, startPage + maxBtn - 1);
+            if (endPage - startPage < maxBtn - 1) {
+                startPage = Math.max(1, endPage - maxBtn + 1);
+            }
+
+            // Prev
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerText = '«';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) changePage(currentPage - 1); };
+            pagination.appendChild(prevBtn);
+
+            // Halaman pertama + dots jika perlu
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.className = 'page-btn';
+                firstBtn.innerText = '1';
+                firstBtn.onclick = () => changePage(1);
+                pagination.appendChild(firstBtn);
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.innerText = '...';
+                    dots.style.cssText = 'padding:0 6px;color:#6b7280;line-height:36px;';
+                    pagination.appendChild(dots);
+                }
+            }
+
+            // Tombol halaman tengah
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                pageBtn.innerText = i;
+                const num = i;
+                pageBtn.onclick = () => changePage(num);
+                pagination.appendChild(pageBtn);
+            }
+
+            // Halaman terakhir + dots jika perlu
+            if (endPage < totalPage) {
+                if (endPage < totalPage - 1) {
+                    const dots = document.createElement('span');
+                    dots.innerText = '...';
+                    dots.style.cssText = 'padding:0 6px;color:#6b7280;line-height:36px;';
+                    pagination.appendChild(dots);
+                }
+                const lastBtn = document.createElement('button');
+                lastBtn.className = 'page-btn';
+                lastBtn.innerText = totalPage;
+                lastBtn.onclick = () => changePage(totalPage);
+                pagination.appendChild(lastBtn);
+            }
+
+            // Next
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerText = '»';
+            nextBtn.disabled = currentPage === totalPage;
+            nextBtn.onclick = () => { if (currentPage < totalPage) changePage(currentPage + 1); };
+            pagination.appendChild(nextBtn);
+
+            // Info halaman
+            const info = document.createElement('span');
+            info.style.cssText = 'margin-left:12px;font-size:13px;color:#6b7280;line-height:36px;';
+            info.innerText = `Hal. ${currentPage} / ${totalPage}`;
+            pagination.appendChild(info);
+        }
+
+       function changePage(page) {
+            currentPage = page;
+            localStorage.setItem("currentPage", String(page));
+            loadKendaraan();
+        }
+
+        function exportPDF() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("pdfTanggal").value = today;
+            document.getElementById("modalPDF").style.display = "flex";
+        }
+
+        function closePDFModal() {
+            document.getElementById("modalPDF").style.display = "none";
+        }
+
+        async function doExportPDF() {
+            const tglInput = document.getElementById("pdfTanggal").value;
+            if (!tglInput) {
+                alert("Pilih tanggal terlebih dahulu!");
+                return;
+            }
+
+            closePDFModal();
+
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("page", "1");
+            params.set("limit", "1000");
+            params.set("startDate", tglInput);
+            params.set("endDate", tglInput);
+
+            const r = await fetch(`/api/db/list?${params.toString()}`);
+            const j = await r.json();
+
+            if (!j.data || j.data.length === 0) {
+                alert(`Tidak ada data untuk tanggal ${tglInput}`);
+                return;
+            }
+
+            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                          "Juli","Agustus","September","Oktober","November","Desember"];
+            const tglObj = new Date(tglInput + 'T00:00:00');
+            const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+
+            let totalKeseluruhan = 0;
+            const rows = j.data.map(d => {
+                const total = d.motorcycle + d.car + d.bus + d.truck;
+                totalKeseluruhan += total;
+                return `<tr>
+                    <td>${d.id}</td>
+                    <td>${d.date}</td>
+                    <td>${d.hour}:00</td>
+                    <td>${d.motorcycle}</td>
+                    <td>${d.car}</td>
+                    <td>${d.bus}</td>
+                    <td>${d.truck}</td>
+                    <td><strong>${total}</strong></td>
+                </tr>`;
+            }).join('');
+
+            const win = window.open("", "", "width=1000,height=700");
+            win.document.write(`
+                <html>
+                <head>
+                    <title>Data Kendaraan - ${tglFormatted}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
+                        .header { border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
+                        h2 { margin:0; color:#1e3a5f; font-size:20px; }
+                        .meta { display:flex; gap:24px; margin-top:8px; font-size:13px; color:#6b7280; }
+                        .meta span strong { color:#1f2937; }
+                        table { width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; }
+                        th { background:#2563eb; color:#fff; padding:10px 8px; text-align:center; }
+                        td { border:1px solid #e5e7eb; padding:8px; text-align:center; }
+                        tr:nth-child(even) td { background:#f9fafb; }
+                        .footer { margin-top:16px; font-size:11px; color:#9ca3af; text-align:right; }
+                        .total-row td { background:#eff6ff; font-weight:bold; color:#1e3a5f; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>📊 Laporan Data Kendaraan</h2>
+                        <div class="meta">
+                            <span>Tanggal: <strong>${tglFormatted}</strong></span>
+                            <span>Total Baris: <strong>${j.data.length}</strong></span>
+                            <span>Total Kendaraan: <strong>${totalKeseluruhan.toLocaleString('id-ID')}</strong></span>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CCTV</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Motor</th>
+                                <th>Mobil</th>
+                                <th>Bus</th>
+                                <th>Truk</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                            <tr class="total-row">
+                                <td colspan="7">TOTAL KESELURUHAN</td>
+                                <td>${totalKeseluruhan.toLocaleString('id-ID')}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="footer">Dicetak pada: ${new Date().toLocaleString('id-ID')}</div>
+                </body>
+                </html>
+            `);
+            win.document.close();
+            win.print();
+        }
+
+        function exportExcel() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("excelTanggal").value = today;
+            document.getElementById("modalExcel").style.display = "flex";
+        }
+
+        function closeExcelModal() {
+            document.getElementById("modalExcel").style.display = "none";
+        }
+
+        async function doExportExcel() {
+            const tglInput = document.getElementById("excelTanggal").value;
+            if (!tglInput) {
+                alert("Pilih tanggal terlebih dahulu!");
+                return;
+            }
+
+            closeExcelModal();
+
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("page", "1");
+            params.set("limit", "1000");
+            params.set("startDate", tglInput);
+            params.set("endDate", tglInput);
+
+            const r = await fetch(`/api/db/list?${params.toString()}`);
+            const j = await r.json();
+
+            if (!j.data || j.data.length === 0) {
+                alert(`Tidak ada data untuk tanggal ${tglInput}`);
+                return;
+            }
+
+            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                          "Juli","Agustus","September","Oktober","November","Desember"];
+            const tglObj = new Date(tglInput + 'T00:00:00');
+            const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+
+            let totalKeseluruhan = 0;
+            const rows = j.data.map(d => {
+                const total = d.motorcycle + d.car + d.bus + d.truck;
+                totalKeseluruhan += total;
+                return `<tr>
+                    <td>${d.id}</td>
+                    <td>${d.date}</td>
+                    <td>${d.hour}:00</td>
+                    <td>${d.motorcycle}</td>
+                    <td>${d.car}</td>
+                    <td>${d.bus}</td>
+                    <td>${d.truck}</td>
+                    <td>${total}</td>
+                </tr>`;
+            }).join('');
+
+            const blob = new Blob([`
+                <html>
+                <head><meta charset="UTF-8"></head>
+                <body>
+                    <h3>Laporan Data Kendaraan - ${tglFormatted}</h3>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>CCTV</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Motor</th>
+                                <th>Mobil</th>
+                                <th>Bus</th>
+                                <th>Truk</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                            <tr>
+                                <td colspan="7"><strong>TOTAL KESELURUHAN</strong></td>
+                                <td><strong>${totalKeseluruhan}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `], { type: "application/vnd.ms-excel" });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Data_Kendaraan_${tglInput}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // ====== RIWAYAT PAGINATION ======
+        let riwayatPage = 1;
+        const riwayatLimit = 10;
+
+        function openRiwayatFilterModal() {
+            document.getElementById("modalRiwayatFilter").style.display = "flex";
+        }
+
+        function closeRiwayatFilterModal() {
+            document.getElementById("modalRiwayatFilter").style.display = "none";
+        }
+
+        function setRiwayatShortcut(type) {
+            const today = new Date();
+            const fmt = d => d.toISOString().split('T')[0];
+            if (type === 'today') {
+                document.getElementById("riwayatStartDate").value = fmt(today);
+                document.getElementById("riwayatEndDate").value = fmt(today);
+            } else if (type === 'yesterday') {
+                const y = new Date(today); y.setDate(y.getDate() - 1);
+                document.getElementById("riwayatStartDate").value = fmt(y);
+                document.getElementById("riwayatEndDate").value = fmt(y);
+            } else if (type === 'week') {
+                const w = new Date(today); w.setDate(w.getDate() - 6);
+                document.getElementById("riwayatStartDate").value = fmt(w);
+                document.getElementById("riwayatEndDate").value = fmt(today);
+            } else if (type === 'month') {
+                const m = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById("riwayatStartDate").value = fmt(m);
+                document.getElementById("riwayatEndDate").value = fmt(today);
+            }
+        }
+
+        function applyRiwayatFilter() {
+            const start = document.getElementById("riwayatStartDate").value;
+            const end = document.getElementById("riwayatEndDate").value;
+
+            if (start && end && start > end) {
+                alert("Tanggal mulai tidak boleh lebih besar dari tanggal akhir.");
+                return;
+            }
+
+            const label = document.getElementById("labelRiwayatAktif");
+            const resetBtn = document.getElementById("btnResetRiwayat");
+            if (start || end) {
+                label.innerText = start && end ? `${formatTanggal(start)} → ${formatTanggal(end)}`
+                                : start ? `Dari ${formatTanggal(start)}`
+                                : `Sampai ${formatTanggal(end)}`;
+                resetBtn.style.display = "inline-block";
+            } else {
+                label.innerText = "";
+                resetBtn.style.display = "none";
+            }
+
+            closeRiwayatFilterModal();
+            riwayatPage = 1;
+            loadRiwayat();
+        }
+
+        function resetRiwayatFilter() {
+            document.getElementById("riwayatStartDate").value = "";
+            document.getElementById("riwayatEndDate").value = "";
+            document.getElementById("labelRiwayatAktif").innerText = "";
+            document.getElementById("btnResetRiwayat").style.display = "none";
+            riwayatPage = 1;
+            loadRiwayat();
+        }
+
+        function buildRiwayatUrl() {
+            const startDate = document.getElementById("riwayatStartDate").value;
+            const endDate = document.getElementById("riwayatEndDate").value;
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("page", String(riwayatPage));
+            params.set("limit", String(riwayatLimit));
+            if (startDate) params.set("startDate", startDate);
+            if (endDate) params.set("endDate", endDate);
+            return `/api/db/riwayat?${params.toString()}`;
+        }
+
+        function formatTanggal(tgl) {
+            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                        "Juli","Agustus","September","Oktober","November","Desember"];
+            const d = new Date(tgl + 'T00:00:00');
+            return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        async function loadRiwayat() {
+            try {
+                const r = await fetch(buildRiwayatUrl());
+                const j = await r.json();
+                const listR = document.getElementById("listRiwayat");
+                const pagR = document.getElementById("paginationRiwayat");
+
+                listR.innerHTML = '';
+                pagR.innerHTML = '';
+
+                if (!j.data || j.data.length === 0) {
+                    listR.innerHTML = '<p style="color:#6b7280;padding:20px;">Tidak ada data.</p>';
+                    return;
+                }
+
+                // Kelompokkan per tanggal
+                let grouped = {};
+                j.data.forEach(row => {
+                    if (!grouped[row.date]) grouped[row.date] = [];
+                    grouped[row.date].push(row);
+                });
+
+                listR.innerHTML = Object.entries(grouped)
+                    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+                    .map(([tgl, rows]) => {
+                        const lokasiRows = rows.map(row => `
+                            <div style="
+                                display:flex;align-items:center;gap:10px;
+                                padding:12px 18px;margin-bottom:8px;
+                                background:#f9fafb;border-left:4px solid #10b981;
+                                border-radius:8px;font-size:14px;color:#374151;
+                                box-shadow:0 1px 3px rgba(0,0,0,0.07);
+                            ">
+                                <span style="font-weight:600;color:#111827;min-width:150px;">
+                                    📅 ${formatTanggal(tgl)}
+                                </span>
+                                <span style="color:#9ca3af;">•</span>
+                                <span style="color:#374151;flex:1;">📍 ${row.id}</span>
+                                <span style="color:#9ca3af;">•</span>
+                                <span style="font-weight:700;color:#10b981;">
+                                    Total ${row.total.toLocaleString('id-ID')} Kendaraan
+                                </span>
+                            </div>
+                        `).join('');
+                        return lokasiRows;
+                    }).join('');
+
+                // Render pagination riwayat
+                const totalPage = Math.ceil(j.total / riwayatLimit);
+                renderRiwayatPagination(totalPage, pagR);
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderRiwayatPagination(totalPage, container) {
+            if (totalPage <= 1) return;
+
+            const maxBtn = 10;
+            let startPage = Math.max(1, riwayatPage - 4);
+            let endPage = Math.min(totalPage, startPage + maxBtn - 1);
+            if (endPage - startPage < maxBtn - 1) startPage = Math.max(1, endPage - maxBtn + 1);
+
+            const prev = document.createElement('button');
+            prev.className = 'page-btn';
+            prev.innerText = '«';
+            prev.disabled = riwayatPage === 1;
+            prev.onclick = () => { if (riwayatPage > 1) { riwayatPage--; loadRiwayat(); } };
+            container.appendChild(prev);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn' + (i === riwayatPage ? ' active' : '');
+                btn.innerText = i;
+                const num = i;
+                btn.onclick = () => { riwayatPage = num; loadRiwayat(); };
+                container.appendChild(btn);
+            }
+
+            const next = document.createElement('button');
+            next.className = 'page-btn';
+            next.innerText = '»';
+            next.disabled = riwayatPage === totalPage;
+            next.onclick = () => { if (riwayatPage < totalPage) { riwayatPage++; loadRiwayat(); } };
+            container.appendChild(next);
+
+            const info = document.createElement('span');
+            info.style.cssText = 'margin-left:12px;font-size:13px;color:#6b7280;line-height:36px;';
+            info.innerText = `Hal. ${riwayatPage} / ${totalPage}`;
+            container.appendChild(info);
+        }
+
+        loadKendaraan();
+        loadRiwayat();
+        setInterval(() => {
+            loadKendaraan();
+            loadRiwayat();
+        }, 10000);
+    </script>
+</body>
+
+</html>

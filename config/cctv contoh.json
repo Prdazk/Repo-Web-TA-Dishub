@@ -1,0 +1,18 @@
+{
+    "streams": [
+        {
+            "id": "1",
+            "lokasi": "Simpang 4 IKIP - Jln. Setia Budi ( Arah Timur )",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/ikip4",
+            "coordinate": {
+                "lat": -6.200123,
+                "lng": 106.816456
+            }
+        },
+        {
+            "id": "2",
+            "lokasi": "Simpang 4 IKIP - Jln. Auri",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/ikip2"
+        }
+    ]
+}
