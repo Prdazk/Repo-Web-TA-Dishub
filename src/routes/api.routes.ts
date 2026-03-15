@@ -271,9 +271,7 @@ router.get("/db/summary", (req: any, res: any) => {
   }
 });
 
-// ============================
-// ROUTE /db/jam-arus   ← TAMBAHKAN DI SINI
-// ============================
+
 router.get("/db/jam-arus", (req: any, res: any) => {
   try {
     const { ids, startDate, endDate } = req.query;

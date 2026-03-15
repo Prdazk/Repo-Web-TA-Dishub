@@ -53,46 +53,70 @@
                 <% streams.forEach(s=> { %>
                     <div class="video-box" onclick="openMonitor('<%= s.id %>')">
                         <div class="video-thumb"
-                            style="background-image:url('/thumb/<%= s.id %>/latest.jpg');background-size:cover"></div>
-                        <div>
+                            style="background-image:url('/thumb/<%= s.id %>/latest.jpg');background-size:cover;height:240px;"></div>
+                        <div style="padding:10px 4px 4px;">
                             <%= s.lokasi %>
                         </div>
                     </div>
                     <% }) %>
             </div>
 
-            <div class="dashboard-summary">
-                <h2 style="margin-top:50px;"></h2>
+           <div class="dashboard-summary">
+         <h2 style="margin-top:16px;"></h2>
 
-                <div class="summary-grid">
-                    <div class="card">
-                        <span>Total Kendaraan Hari Ini</span>
-                        <h3 id="totalRiwayat">0</h3>
+                <!-- Modal Total Kendaraan Per Lokasi -->
+            <div id="modalTotalKendaraan" onclick="this.style.display='none'" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:28px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;color:#1e3a5f;font-size:16px;">🚗 Total Kendaraan Per Lokasi</h3>
+                        <span onclick="document.getElementById('modalTotalKendaraan').style.display='none'" style="cursor:pointer;font-size:18px;color:#9ca3af;">✕</span>
                     </div>
-                    <div class="card">
-                        <span>Lokasi Terpantau</span>
-                        <h3 id="totalLokasi"><%= streams.length %></h3>
-                    </div>
-                </div>
-
-                <div class="summary-small">
-                    <div class="card">
-                        <span>Jam Arus Tertinggi</span>
-                        <h3 id="jamTertinggi">-</h3>
-                        <small id="labelJamTertinggi" style="color:#9ca3af;font-size:11px;"></small>
-                    </div>
-                    <div class="card">
-                        <span>Jam Arus Rata Rata</span>
-                        <h3 id="jamMenengah">-</h3>
-                        <small id="labelJamMenengah" style="color:#9ca3af;font-size:11px;"></small>
-                    </div>
-                    <div class="card">
-                        <span>Jam Arus Terendah</span>
-                        <h3 id="jamTerendah">-</h3>
-                        <small id="labelJamTerendah" style="color:#9ca3af;font-size:11px;"></small>
-                    </div>
+                    <div id="modalTotalKendaraanIsi" style="display:flex;flex-direction:column;gap:10px;"></div>
                 </div>
             </div>
+
+            <!-- Modal Lokasi Terpantau -->
+            <div id="modalLokasiTerpantau" onclick="this.style.display='none'" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:28px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;color:#1e3a5f;font-size:16px;">📍 Lokasi Terpantau</h3>
+                        <span onclick="document.getElementById('modalLokasiTerpantau').style.display='none'" style="cursor:pointer;font-size:18px;color:#9ca3af;">✕</span>
+                    </div>
+                    <div id="modalLokasiTerpantauIsi" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+            </div>
+                <div class="summary-grid">
+                <div class="card" onclick="bukaModalKendaraan()" style="cursor:pointer;padding:14px 20px;" title="Klik untuk detail per lokasi">
+                    <span style="font-size:11px;">Total Kendaraan Hari Ini</span>
+                    <h3 id="totalRiwayat" style="margin:4px 0;font-size:28px;line-height:1.1;">0</h3>
+                    <div id="totalPerLokasi" style="margin-top:4px;font-size:12px;color:#9ca3af;line-height:1.8;"></div>
+                    <small style="color:#10b981;font-size:11px;margin-top:4px;display:block;">🔍 Klik untuk detail</small>
+                </div>
+                <div class="card" onclick="bukaModalLokasi()" style="cursor:pointer;padding:14px 20px;" title="Klik untuk lihat lokasi">
+                    <span style="font-size:11px;">Lokasi Terpantau</span>
+                    <h3 id="totalLokasi" style="margin:4px 0;font-size:28px;line-height:1.1;"><%= streams.length %></h3>
+                    <small style="color:#3b82f6;font-size:11px;margin-top:4px;display:block;">🔍 Klik untuk detail</small>
+                </div>
+            </div>
+
+               <div class="summary-small">
+                <div class="card" style="padding:20px 22px;">
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">🔺 Jam Arus Tertinggi</span>
+                    <div id="jamTertinggi" style="margin-top:8px;"></div>
+                    <small id="labelJamTertinggi" style="color:#9ca3af;font-size:10px;"></small>
+                </div>
+                <div class="card" style="padding:20px 22px;">
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">〰️ Jam Arus Rata Rata</span>
+                    <div id="jamMenengah" style="margin-top:8px;"></div>
+                    <small id="labelJamMenengah" style="color:#9ca3af;font-size:10px;"></small>
+                </div>
+                <div class="card" style="padding:20px 22px;">
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">🔻 Jam Arus Terendah</span>
+                    <div id="jamTerendah" style="margin-top:8px;"></div>
+                    <small id="labelJamTerendah" style="color:#9ca3af;font-size:10px;"></small>
+                </div>
+            </div>
+                </div>
         </section>
 
         <section id="kendaraan">
@@ -415,24 +439,12 @@
             if (!isNaN(p) && p > 0) currentPage = p;
         }
 
-        // Restore filter tanggal dari localStorage
-        const savedStart = localStorage.getItem("filterStartDate") || "";
-        const savedEnd = localStorage.getItem("filterEndDate") || "";
-        if (savedStart || savedEnd) {
-            const label = document.getElementById("labelFilterAktif");
-            const resetBtn = document.getElementById("btnResetFilter");
-            if (label) {
-                label.innerText = savedStart && savedEnd
-                    ? `${formatTanggal(savedStart)} → ${formatTanggal(savedEnd)}`
-                    : savedStart ? `Dari ${formatTanggal(savedStart)}`
-                    : `Sampai ${formatTanggal(savedEnd)}`;
-            }
-            if (resetBtn) resetBtn.style.display = "inline-block";
-        }
-
         function buildListUrl() {
-            const startDate = document.getElementById("startDate").value;
-            const endDate = document.getElementById("endDate").value;
+            // Ambil dari input modal, fallback ke localStorage kalau input kosong
+            const startDate = document.getElementById("startDate").value
+                           || localStorage.getItem("filterStartDate") || "";
+            const endDate = document.getElementById("endDate").value
+                         || localStorage.getItem("filterEndDate") || "";
 
             const params = new URLSearchParams();
             params.set("ids", cctv);
@@ -496,24 +508,13 @@
                             <td>${d.id}</td>
                             <td>${d.date}</td>
                             <td>${d.hour}:00</td>
-                            <td><i class="fa fa-motorcycle"></i> ${d.motorcycle}</td>
-                            <td><i class="fa fa-car"></i> ${d.car}</td>
-                            <td><i class="fa fa-bus"></i> ${d.bus}</td>
-                            <td><i class="fa fa-truck"></i> ${d.truck}</td>
+                            <td><span style="font-size:18px;">🏍️</span> ${d.motorcycle}</td>
+                            <td><span style="font-size:18px;">🚗</span> ${d.car}</td>
+                            <td><span style="font-size:18px;">🚌</span> ${d.bus}</td>
+                            <td><span style="font-size:18px;">🚛</span> ${d.truck}</td>
                             <td><strong>${total}</strong></td>
                         </tr>`;
                 });
-
-                // if (dataTableInstance) {
-                //     dataTableInstance.destroy();
-                // }
-
-                // dataTableInstance = new DataTable('#myTable', {
-                //     responsive: true,
-                //     paging: false,
-                //     info: false,
-                //     searching: false
-                // });
 
                 renderPagination(totalPage);
 
@@ -524,6 +525,41 @@
                 summaryParams.set("endDate", today);
                 const rSummary = await fetch(`/api/db/summary?${summaryParams.toString()}`);
                 const jSummary = await rSummary.json();
+
+                // Ambil data per lokasi hari ini khusus untuk card breakdown
+                    const rPerLokasi = await fetch(`/api/db/list?${summaryParams.toString()}&limit=1000`);
+                    const jPerLokasi = await rPerLokasi.json();
+                    const perLokasiHariIni = {};
+                    (jPerLokasi.data || []).forEach(row => {
+                        if (!perLokasiHariIni[row.id]) perLokasiHariIni[row.id] = 0;
+                        perLokasiHariIni[row.id] += row.motorcycle + row.car + row.bus + row.truck;
+                    });
+
+                    
+                   window._perLokasiHariIni = perLokasiHariIni;
+                    const elLokasi = document.getElementById("totalPerLokasi");
+                    if (elLokasi) {
+                        elLokasi.innerHTML = '';
+                    }
+
+                    // Simpan data untuk jam arus — fallback ke kemarin kalau < 2 jam unik
+                    const jamHariIniCount = [...new Set((jPerLokasi.data || []).map(r => r.hour))].length;
+                    if (jamHariIniCount >= 2) {
+                        window._dataHariIni = jPerLokasi.data || [];
+                    } else {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yDate = yesterday.toISOString().split('T')[0];
+                        const yListParams = new URLSearchParams();
+                        yListParams.set("ids", cctv);
+                        yListParams.set("startDate", yDate);
+                        yListParams.set("endDate", yDate);
+                        yListParams.set("limit", "1000");
+                        const rYList = await fetch(`/api/db/list?${yListParams.toString()}`);
+                        const jYList = await rYList.json();
+                        const jamKemarinCount = [...new Set((jYList.data || []).map(r => r.hour))].length;
+                        window._dataHariIni = jamKemarinCount >= 2 ? (jYList.data || []) : (jPerLokasi.data || []);
+                    }
 
                 // Jam arus hari ini
                 const rJam = await fetch(`/api/db/jam-arus?${summaryParams.toString()}`);
@@ -573,123 +609,149 @@
         }
 
         function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamMap, dateMap) {
+        document.getElementById("totalLokasi").innerText = cctv.split(',').length;
+        document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
 
-            document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
-            document.getElementById("totalLokasi").innerText = lokasiSet.size;
+        // Buat jamArray dari jamMap gabungan (untuk chart)
+        let jamArray = Object.entries(jamMap)
+            .map(([jam, total]) => ({ jam: parseInt(jam, 10), total }))
+            .sort((a, b) => a.jam - b.jam);
 
-            let jamArray = Object.entries(jamMap)
-                .map(([jam, total]) => ({ jam: parseInt(jam, 10), total }))
-                .sort((a, b) => a.jam - b.jam);
+        // ====== HITUNG JAM ARUS PER LOKASI ======
+        const dataJamArus = window._dataHariIni || lastData;
+        if (dataJamArus.length > 0) {
+            const lokasiIds = [...new Set(dataJamArus.map(r => r.id))];
 
-            if (jamArray.length > 0) {
-
-                    let sortedByTotal = [...jamArray].sort((a, b) => b.total - a.total);
-
-                    const tertinggi = sortedByTotal[0];
-                    document.getElementById("jamTertinggi").innerText =
-                        String(tertinggi.jam).padStart(2, '0') + ":00 (" + tertinggi.total.toLocaleString('id-ID') + ")";
-
-                    const terendah = sortedByTotal[sortedByTotal.length - 1];
-                    document.getElementById("jamTerendah").innerText =
-                        String(terendah.jam).padStart(2, '0') + ":00 (" + terendah.total.toLocaleString('id-ID') + ")";
-
-                    const totalKeseluruhan = jamArray.reduce((sum, j) => sum + j.total, 0);
-                    const rataRata = totalKeseluruhan / jamArray.length;
-
-                    const jamRataRata = jamArray.reduce((closest, j) =>
-                        Math.abs(j.total - rataRata) < Math.abs(closest.total - rataRata) ? j : closest
-                    );
-  
-                    document.getElementById("jamMenengah").innerText =
-                        String(jamRataRata.jam).padStart(2, '0') + ":00 (" + Math.round(rataRata).toLocaleString('id-ID') + ")";
-                }
-
-            const ctx = document.getElementById('arusChart').getContext('2d');
-
-            if (arusChartInstance) {
-                arusChartInstance.destroy();
-            }
-
-            arusChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: jamArray.map(j => j.jam + ":00"),
-                    datasets: [{
-                        label: 'Total Kendaraan',
-                        data: jamArray.map(j => j.total),
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16,185,129,0.15)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#10b981'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
+            const jamPerLokasi = {};
+            lokasiIds.forEach(id => { jamPerLokasi[id] = {}; });
+            dataJamArus.forEach(row => {
+                const jam = parseInt(row.hour, 10);
+                if (!jamPerLokasi[row.id][jam]) jamPerLokasi[row.id][jam] = 0;
+                jamPerLokasi[row.id][jam] += row.motorcycle + row.car + row.bus + row.truck;
             });
 
-                // Urutkan tanggal dari terlama ke terbaru
-                let dateArray = Object.entries(dateMap)
-                    .map(([tgl, total]) => ({ tgl, total }))
-                    .sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
+            const hasilPerLokasi = lokasiIds.map(id => {
+                const arr = Object.entries(jamPerLokasi[id])
+                    .map(([jam, total]) => ({ jam: parseInt(jam), total }))
+                    .sort((a, b) => b.total - a.total);
+                if (arr.length === 0) return null;
+                const totalAll = arr.reduce((s, j) => s + j.total, 0);
+                const rata = totalAll / arr.length;
+                const jamRata = arr.reduce((closest, j) =>
+                    Math.abs(j.total - rata) < Math.abs(closest.total - rata) ? j : closest
+                );
+                return {
+                    id,
+                    tertinggi: arr[0],
+                    terendah: arr[arr.length - 1],
+                    rata: { jam: jamRata.jam, nilai: Math.round(rata) }
+                };
+            }).filter(Boolean);
 
-                // Kelompokkan data per tanggal + per lokasi CCTV dari data asli
-                let dateLokasiMap = {};
-                lastData.forEach(row => {
-                    const key = row.date;
-                    if (!dateLokasiMap[key]) dateLokasiMap[key] = {};
-                    if (!dateLokasiMap[key][row.id]) dateLokasiMap[key][row.id] = 0;
-                    dateLokasiMap[key][row.id] += row.motorcycle + row.car + row.bus + row.truck;
-                });
-
-                listR.innerHTML = dateArray.map(d => {
-                    const lokasiHari = dateLokasiMap[d.tgl] || {};
-                    const lokasiEntries = Object.entries(lokasiHari);
-
-                    // Buat baris per CCTV dalam 1 tanggal
-                    const lokasiRows = lokasiEntries.map(([id, totalLokasi]) => `
-                        <div style="
-                            display:flex;
-                            align-items:center;
-                            gap:10px;
-                            padding:12px 18px;
-                            margin-bottom:8px;
-                            background:#f9fafb;
-                            border-left:4px solid #10b981;
-                            border-radius:8px;
-                            font-size:14px;
-                            color:#374151;
-                            box-shadow:0 1px 3px rgba(0,0,0,0.07);
-                        ">
-                            <span style="font-weight:600;color:#111827;min-width:150px;">
-                                📅 ${formatTanggal(d.tgl)}
-                            </span>
-                            <span style="color:#9ca3af;">•</span>
-                            <span style="color:#374151;flex:1;">
-                                📍 ${id}
-                            </span>
-                            <span style="color:#9ca3af;">•</span>
-                            <span style="font-weight:700;color:#10b981;">
-                                Total ${totalLokasi.toLocaleString('id-ID')} Kendaraan
-                            </span>
+            if (hasilPerLokasi.length > 0) {
+                const namaPendek = id => { const m = id.match(/(\d+)/); return m ? `CCTV ${m[1]}` : id; };
+                const warnaRow = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6'];
+                const buatBaris = (h, i, jam, total, prefix) => `
+                    <div style="
+                        display:flex;align-items:center;justify-content:space-between;
+                        padding:10px 14px;margin-top:6px;border-radius:10px;
+                        background:#f8fafc;border-left:3px solid ${warnaRow[i % warnaRow.length]};
+                    ">
+                        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+                            <div style="
+                                width:26px;height:26px;border-radius:6px;flex-shrink:0;
+                                background:${warnaRow[i % warnaRow.length]};
+                                display:flex;align-items:center;justify-content:center;
+                                color:#fff;font-size:11px;font-weight:800;
+                            ">${i+1}</div>
+                            <div style="flex:1;text-align:center;">
+                                <div style="font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">${namaPendek(h.id)}</div>
+                                <div style="font-size:20px;font-weight:900;color:#1e3a5f;line-height:1;letter-spacing:-1px;">${String(jam).padStart(2,'0')}:00</div>
+                            </div>
                         </div>
-                    `).join('');
+                        <div style="text-align:right;min-width:60px;">
+                            <div style="font-size:17px;font-weight:900;color:${warnaRow[i % warnaRow.length]};line-height:1;">${total.toLocaleString('id-ID')}</div>
+                            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">kend.</div>
+                        </div>
+                    </div>`;
 
-                    return lokasiRows;
-                }).join('');
-        }
+                document.getElementById("jamTertinggi").innerHTML =
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.tertinggi.jam, h.tertinggi.total, 'Tertinggi')).join('');
+
+                document.getElementById("jamMenengah").innerHTML =
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.rata.jam, h.rata.nilai, 'Rata-rata')).join('');
+
+                document.getElementById("jamTerendah").innerHTML =
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.terendah.jam, h.terendah.total, 'Terendah')).join('');
+
+            } // tutup if hasilPerLokasi
+        } // tutup if lastData
+
+        // ====== CHART ======
+       // ====== CHART — pakai jamMap gabungan semua lokasi ======
+        const ctx = document.getElementById('arusChart').getContext('2d');
+        if (arusChartInstance) arusChartInstance.destroy();
+
+        const lokasiIdsChart = [...new Set((window._dataHariIni || lastData).map(r => r.id))];
+        const colorsChart = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+        const datasetsChart = lokasiIdsChart.map((id, i) => {
+            const dataPerJam = jamArray.map(j => {
+                const rows = (window._dataHariIni || lastData).filter(r => r.id === id && parseInt(r.hour) === j.jam);
+                return rows.reduce((s, r) => s + r.motorcycle + r.car + r.bus + r.truck, 0);
+            });
+            return {
+                label: id,
+                data: dataPerJam,
+                borderColor: colorsChart[i % colorsChart.length],
+                backgroundColor: colorsChart[i % colorsChart.length] + '26',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: colorsChart[i % colorsChart.length]
+            };
+        });
+
+        arusChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: jamArray.map(j => j.jam + ":00"),
+                datasets: datasetsChart
+            },
+            
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // ====== LIST RIWAYAT ======
+        let dateArray = Object.entries(dateMap)
+            .map(([tgl, total]) => ({ tgl, total }))
+            .sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
+
+        let dateLokasiMap = {};
+        lastData.forEach(row => {
+            if (!dateLokasiMap[row.date]) dateLokasiMap[row.date] = {};
+            if (!dateLokasiMap[row.date][row.id]) dateLokasiMap[row.date][row.id] = 0;
+            dateLokasiMap[row.date][row.id] += row.motorcycle + row.car + row.bus + row.truck;
+        });
+
+        listR.innerHTML = dateArray.map(d => {
+            const lokasiEntries = Object.entries(dateLokasiMap[d.tgl] || {});
+            return lokasiEntries.map(([id, totalLokasi]) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;margin-bottom:8px;
+                    background:#f9fafb;border-left:4px solid #10b981;border-radius:8px;font-size:14px;
+                    color:#374151;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
+                    <span style="font-weight:600;color:#111827;min-width:150px;">📅 ${formatTanggal(d.tgl)}</span>
+                    <span style="color:#9ca3af;">•</span>
+                    <span style="color:#374151;flex:1;">📍 ${id}</span>
+                    <span style="color:#9ca3af;">•</span>
+                    <span style="font-weight:700;color:#10b981;">Total ${totalLokasi.toLocaleString('id-ID')} Kendaraan</span>
+                </div>
+            `).join('');
+        }).join('');
+    } // tutup function renderRiwayat
 
        function renderPagination(totalPage) {
             pagination.innerHTML = '';
@@ -1118,8 +1180,10 @@
                 renderRiwayatPagination(totalPage, pagR);
 
             } catch (e) {
-                console.error(e);
-            }
+            console.error(e);
+            document.getElementById("listRiwayat").innerHTML =
+                '<p style="color:#ef4444;padding:20px;">⚠️ Gagal memuat data riwayat.</p>';
+        }
         }
 
         function renderRiwayatPagination(totalPage, container) {
@@ -1159,12 +1223,59 @@
             container.appendChild(info);
         }
 
+       function bukaModalKendaraan() {
+            const isi = document.getElementById("modalTotalKendaraanIsi");
+            const items = Object.entries(window._perLokasiHariIni || {});
+            if (items.length === 0) {
+                isi.innerHTML = '<p style="color:#6b7280;text-align:center;">Data belum tersedia</p>';
+            } else {
+                isi.innerHTML = items.map(([id, total]) => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:10px;">
+                        <span style="font-size:13px;color:#374151;font-weight:500;">📍 ${id}</span>
+                        <strong style="color:#10b981;font-size:15px;">${total.toLocaleString('id-ID')}</strong>
+                    </div>
+                `).join('');
+            }
+            document.getElementById("modalTotalKendaraan").style.display = "flex";
+        }
+
+        function bukaModalLokasi() {
+            const isi = document.getElementById("modalLokasiTerpantauIsi");
+            const streams = "<%= streams.map(s => s.lokasi).join('||') %>".split('||');
+            isi.innerHTML = streams.map((lok) => `
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:10px;">
+                    <span style="font-size:20px;">📍</span>
+                    <span style="font-size:13px;color:#1e3a5f;font-weight:500;">${lok}</span>
+                </div>
+            `).join('');
+            document.getElementById("modalLokasiTerpantau").style.display = "flex";
+        }
+
+        // Restore label filter setelah formatTanggal tersedia
+        (function restoreFilterLabel() {
+            const savedStart = localStorage.getItem("filterStartDate") || "";
+            const savedEnd = localStorage.getItem("filterEndDate") || "";
+            if (savedStart || savedEnd) {
+                const label = document.getElementById("labelFilterAktif");
+                const resetBtn = document.getElementById("btnResetFilter");
+                if (label) {
+                    label.innerText = savedStart && savedEnd
+                        ? `${formatTanggal(savedStart)} → ${formatTanggal(savedEnd)}`
+                        : savedStart ? `Dari ${formatTanggal(savedStart)}`
+                        : `Sampai ${formatTanggal(savedEnd)}`;
+                }
+                if (resetBtn) resetBtn.style.display = "inline-block";
+            }
+        })();
+
         loadKendaraan();
         loadRiwayat();
+
+            setInterval(() => loadKendaraan(), 10000);
         setInterval(() => {
-            loadKendaraan();
-            loadRiwayat();
-        }, 10000);
+            const activeTab = localStorage.getItem("activeTab") || "dashboard";
+            if (activeTab === "riwayat") loadRiwayat();
+        }, 15000);
     </script>
 </body>
 

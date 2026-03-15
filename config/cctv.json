@@ -7,8 +7,8 @@
         },
         {
             "id": "2",
-            "lokasi": "Simpang 4 Sleko - Jln. Musi",
-            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/seleko4"
+            "lokasi": "Simpang 4 Sleko - Jln. Trunojoyo",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/seleko1"
         }
     ]
 }
