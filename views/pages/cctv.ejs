@@ -123,8 +123,8 @@
             <h2>Data Kendaraan</h2>
 
             <!-- Modal Export Excel -->
-                <div id="modalExcel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
-                    <div style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div id="modalExcel" onclick="if(event.target===this)closeExcelModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
                         <h3 style="margin:0 0 8px;color:#166534;font-size:18px;">📊 Export Excel</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
@@ -137,8 +137,8 @@
                 </div>
 
             <!-- Modal Export PDF -->
-                <div id="modalPDF" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
-                    <div style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div id="modalPDF" onclick="if(event.target===this)closePDFModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+                         <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
                         <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;">📄 Export PDF</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
@@ -1030,12 +1030,12 @@
                     </table>
                 </body>
                 </html>
-            `], { type: "application/vnd.ms-excel" });
+            `], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `Data_Kendaraan_${tglInput}.xls`;
+            a.download = `Data_Kendaraan_${tglInput}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
