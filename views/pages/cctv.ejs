@@ -301,6 +301,7 @@
     <script>
         let arusChartInstance = null;
         let lastData = []; // menyimpan data asli dari API
+        let _perLokasiHariIni = {}; // ← tambah ini
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = () => {
@@ -523,83 +524,57 @@
                 summaryParams.set("ids", cctv);
                 summaryParams.set("startDate", today);
                 summaryParams.set("endDate", today);
-                const rSummary = await fetch(`/api/db/summary?${summaryParams.toString()}`);
-                const jSummary = await rSummary.json();
 
-                // Ambil data per lokasi hari ini khusus untuk card breakdown
-                    const rPerLokasi = await fetch(`/api/db/list?${summaryParams.toString()}&limit=1000`);
-                    const jPerLokasi = await rPerLokasi.json();
-                    const perLokasiHariIni = {};
-                    (jPerLokasi.data || []).forEach(row => {
-                        if (!perLokasiHariIni[row.id]) perLokasiHariIni[row.id] = 0;
-                        perLokasiHariIni[row.id] += row.motorcycle + row.car + row.bus + row.truck;
-                    });
+                // Fetch summary, per-lokasi, dan jam-arus secara PARALLEL
+                const [jSummary, jPerLokasi, jJamArus] = await Promise.all([
+                    fetch(`/api/db/summary?${summaryParams.toString()}`).then(r => r.json()),
+                    fetch(`/api/db/per-lokasi?${summaryParams.toString()}`).then(r => r.json()),
+                    fetch(`/api/db/jam-arus?${summaryParams.toString()}`).then(r => r.json())
+                ]);
 
-                    
-                   window._perLokasiHariIni = perLokasiHariIni;
-                    const elLokasi = document.getElementById("totalPerLokasi");
-                    if (elLokasi) {
-                        elLokasi.innerHTML = '';
-                    }
-
-                    // Simpan data untuk jam arus — fallback ke kemarin kalau < 2 jam unik
-                    const jamHariIniCount = [...new Set((jPerLokasi.data || []).map(r => r.hour))].length;
-                    if (jamHariIniCount >= 2) {
-                        window._dataHariIni = jPerLokasi.data || [];
-                    } else {
-                        const yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        const yDate = yesterday.toISOString().split('T')[0];
-                        const yListParams = new URLSearchParams();
-                        yListParams.set("ids", cctv);
-                        yListParams.set("startDate", yDate);
-                        yListParams.set("endDate", yDate);
-                        yListParams.set("limit", "1000");
-                        const rYList = await fetch(`/api/db/list?${yListParams.toString()}`);
-                        const jYList = await rYList.json();
-                        const jamKemarinCount = [...new Set((jYList.data || []).map(r => r.hour))].length;
-                        window._dataHariIni = jamKemarinCount >= 2 ? (jYList.data || []) : (jPerLokasi.data || []);
-                    }
-
-                // Jam arus hari ini
-                const rJam = await fetch(`/api/db/jam-arus?${summaryParams.toString()}`);
-                const jJam = await rJam.json();
-                let jamMapDB = {};
-                (jJam.data || []).forEach(row => {
-                    jamMapDB[parseInt(row.hour, 10)] = row.total;
+                // Simpan per-lokasi ke variabel biasa (tidak pakai window.*)
+                const perLokasiHariIni = {};
+                (jPerLokasi.data || []).forEach(row => {
+                    perLokasiHariIni[row.id] = row.total;
                 });
+                _perLokasiHariIni = perLokasiHariIni;
 
-                // Kalau hari ini kurang dari 2 jam, fallback ke kemarin
+                // Susun jamArusData dari response baru (per cctv_id + hour)
+                let jamArusData = jJamArus.data || [];
+
+                // Cek apakah perlu fallback ke kemarin (pakai jam_unik dari /db/per-lokasi)
+                const maxJamUnik = (jPerLokasi.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
                 let jamLabel = "hari ini";
-                if (Object.keys(jamMapDB).length < 2) {
+
+                if (maxJamUnik < 2) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yDate = yesterday.toISOString().split('T')[0];
-
                     const yParams = new URLSearchParams();
                     yParams.set("ids", cctv);
                     yParams.set("startDate", yDate);
                     yParams.set("endDate", yDate);
 
-                    const rJamY = await fetch(`/api/db/jam-arus?${yParams.toString()}`);
-                    const jJamY = await rJamY.json();
+                    // Fallback juga parallel
+                    const [jJamY, jPerLokasiY] = await Promise.all([
+                        fetch(`/api/db/jam-arus?${yParams.toString()}`).then(r => r.json()),
+                        fetch(`/api/db/per-lokasi?${yParams.toString()}`).then(r => r.json())
+                    ]);
 
-                    if (jJamY.data && jJamY.data.length >= 2) {
-                        jamMapDB = {};
-                        jJamY.data.forEach(row => {
-                            jamMapDB[parseInt(row.hour, 10)] = row.total;
-                        });
+                    const maxJamUnikKemarin = (jPerLokasiY.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
+                    if (maxJamUnikKemarin >= 2) {
+                        jamArusData = jJamY.data || [];
                         jamLabel = "data kemarin";
                     }
                 }
 
-                // Tampilkan label di card
+                // Tampilkan label fallback di card
                 ["labelJamTertinggi","labelJamMenengah","labelJamTerendah"].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = jamLabel === "data kemarin" ? "📅 Menampilkan data kemarin" : "";
                 });
 
-                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamMapDB, dateMap);
+                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni, dateMap);
  
             } catch (e) {
                 console.error(e);
@@ -608,26 +583,21 @@
             }
         }
 
-        function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamMap, dateMap) {
+        function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamArusData, perLokasiHariIni, dateMap) {
         document.getElementById("totalLokasi").innerText = cctv.split(',').length;
         document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
 
-        // Buat jamArray dari jamMap gabungan (untuk chart)
-        let jamArray = Object.entries(jamMap)
-            .map(([jam, total]) => ({ jam: parseInt(jam, 10), total }))
-            .sort((a, b) => a.jam - b.jam);
+        // ====== HITUNG JAM ARUS PER LOKASI dari data baru ======
+        // jamArusData = [{cctv_id, id, hour, total}, ...] sudah per CCTV per jam dari backend
+        if (jamArusData.length > 0) {
+            const lokasiIds = [...new Set(jamArusData.map(r => r.id))];
 
-        // ====== HITUNG JAM ARUS PER LOKASI ======
-        const dataJamArus = window._dataHariIni || lastData;
-        if (dataJamArus.length > 0) {
-            const lokasiIds = [...new Set(dataJamArus.map(r => r.id))];
-
+            // Susun per lokasi: { "cctv_1 - Lokasi A": { 7: 120, 8: 310, ... } }
             const jamPerLokasi = {};
             lokasiIds.forEach(id => { jamPerLokasi[id] = {}; });
-            dataJamArus.forEach(row => {
+            jamArusData.forEach(row => {
                 const jam = parseInt(row.hour, 10);
-                if (!jamPerLokasi[row.id][jam]) jamPerLokasi[row.id][jam] = 0;
-                jamPerLokasi[row.id][jam] += row.motorcycle + row.car + row.bus + row.truck;
+                jamPerLokasi[row.id][jam] = row.total; // sudah teragregasi dari backend
             });
 
             const hasilPerLokasi = lokasiIds.map(id => {
@@ -651,7 +621,7 @@
             if (hasilPerLokasi.length > 0) {
                 const namaPendek = id => { const m = id.match(/(\d+)/); return m ? `CCTV ${m[1]}` : id; };
                 const warnaRow = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6'];
-                const buatBaris = (h, i, jam, total, prefix) => `
+                const buatBaris = (h, i, jam, total) => `
                     <div style="
                         display:flex;align-items:center;justify-content:space-between;
                         padding:10px 14px;margin-top:6px;border-radius:10px;
@@ -676,28 +646,25 @@
                     </div>`;
 
                 document.getElementById("jamTertinggi").innerHTML =
-                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.tertinggi.jam, h.tertinggi.total, 'Tertinggi')).join('');
-
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.tertinggi.jam, h.tertinggi.total)).join('');
                 document.getElementById("jamMenengah").innerHTML =
-                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.rata.jam, h.rata.nilai, 'Rata-rata')).join('');
-
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.rata.jam, h.rata.nilai)).join('');
                 document.getElementById("jamTerendah").innerHTML =
-                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.terendah.jam, h.terendah.total, 'Terendah')).join('');
+                    hasilPerLokasi.map((h,i) => buatBaris(h, i, h.terendah.jam, h.terendah.total)).join('');
+            }
+        }
 
-            } // tutup if hasilPerLokasi
-        } // tutup if lastData
-
-        // ====== CHART ======
-       // ====== CHART — pakai jamMap gabungan semua lokasi ======
+        // ====== CHART — per CCTV per jam dari jamArusData ======
+        const allJam = [...new Set(jamArusData.map(r => parseInt(r.hour, 10)))].sort((a, b) => a - b);
+        const lokasiIdsChart = [...new Set(jamArusData.map(r => r.id))];
+        const colorsChart = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
         const ctx = document.getElementById('arusChart').getContext('2d');
         if (arusChartInstance) arusChartInstance.destroy();
 
-        const lokasiIdsChart = [...new Set((window._dataHariIni || lastData).map(r => r.id))];
-        const colorsChart = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
         const datasetsChart = lokasiIdsChart.map((id, i) => {
-            const dataPerJam = jamArray.map(j => {
-                const rows = (window._dataHariIni || lastData).filter(r => r.id === id && parseInt(r.hour) === j.jam);
-                return rows.reduce((s, r) => s + r.motorcycle + r.car + r.bus + r.truck, 0);
+            const dataPerJam = allJam.map(jam => {
+                const row = jamArusData.find(r => r.id === id && parseInt(r.hour, 10) === jam);
+                return row ? row.total : 0;
             });
             return {
                 label: id,
@@ -714,10 +681,9 @@
         arusChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: jamArray.map(j => j.jam + ":00"),
+                labels: allJam.map(j => j + ":00"),
                 datasets: datasetsChart
             },
-            
             options: {
                 responsive: true,
                 plugins: { legend: { display: true } },
@@ -1223,9 +1189,9 @@
             container.appendChild(info);
         }
 
-       function bukaModalKendaraan() {
+      function bukaModalKendaraan() {
             const isi = document.getElementById("modalTotalKendaraanIsi");
-            const items = Object.entries(window._perLokasiHariIni || {});
+            const items = Object.entries(_perLokasiHariIni || {});
             if (items.length === 0) {
                 isi.innerHTML = '<p style="color:#6b7280;text-align:center;">Data belum tersedia</p>';
             } else {

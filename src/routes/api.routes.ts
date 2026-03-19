@@ -18,10 +18,13 @@ const JSON_FILE = path.join(process.cwd(), "db", "traffic.json");
 const CCTV_CONFIG = path.join(process.cwd(), "config", "cctv.json");
 
 let sqlite: Database.Database | null = null;
+let _cctvMapCache: Map<string, CctvInfo> | null = null; // ← tambah ini
 
 function getDb() {
   if (!sqlite) {
     sqlite = new Database(DB_FILE);
+    sqlite.pragma("journal_mode = WAL");
+    sqlite.pragma("busy_timeout = 5000");
 
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS traffic_data (
@@ -66,20 +69,19 @@ router.get("/server-health", async (req, res) => {
 // HELPERS
 // ============================
 function loadCctvMap() {
+  if (_cctvMapCache) return { cctvMap: _cctvMapCache };
+
   const cctvConfig = JSON.parse(fs.readFileSync(CCTV_CONFIG, "utf-8"));
   const streams = cctvConfig.streams || [];
 
-  const cctvMap = new Map<string, CctvInfo>(
+  _cctvMapCache = new Map<string, CctvInfo>(
     streams.map((s: any) => [
       "cctv_" + s.id,
-      {
-        lokasi: s.lokasi,
-        ws_url: s.ws_url,
-      },
+      { lokasi: s.lokasi, ws_url: s.ws_url }
     ])
   );
 
-  return { cctvMap };
+  return { cctvMap: _cctvMapCache };
 }
 
 function safeParseInt(v: any, fallback: number) {
@@ -294,15 +296,29 @@ router.get("/db/jam-arus", (req: any, res: any) => {
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
+const { cctvMap } = loadCctvMap();
+
     const rows = db.prepare<any[], any>(`
-      SELECT hour,
+      SELECT
+        cctv_id,
+        hour,
         SUM(motorcycle + car + bus + truck) as total
       FROM traffic_data ${whereSql}
-      GROUP BY hour
-      ORDER BY CAST(hour AS INTEGER) ASC
+      GROUP BY cctv_id, hour
+      ORDER BY cctv_id, CAST(hour AS INTEGER) ASC
     `).all(...params);
 
-    return res.json({ success: true, data: rows });
+    const data = rows.map((row: any) => {
+      const info = cctvMap.get(row.cctv_id);
+      return {
+        cctv_id: row.cctv_id,
+        id: `${row.cctv_id} - ${info?.lokasi || "Tidak diketahui"}`,
+        hour: row.hour,
+        total: row.total
+      };
+    });
+
+    return res.json({ success: true, data });
 
   } catch (e: any) {
     return res.status(500).json({ success: false, message: e.message });
@@ -372,6 +388,59 @@ router.get("/db/riwayat", (req: any, res: any) => {
       limit: limitNumber,
       data
     });
+
+  } catch (e: any) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ============================
+// ROUTE /db/per-lokasi
+// ============================
+router.get("/db/per-lokasi", (req: any, res: any) => {
+  try {
+    const { ids, startDate, endDate } = req.query;
+    const { cctvMap } = loadCctvMap();
+
+    const idList = ids
+      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      : [];
+
+    const db = getDb();
+    const where: string[] = [];
+    const params: any[] = [];
+
+    if (idList.length > 0) {
+      const placeholders = idList.map(() => "?").join(", ");
+      where.push(`cctv_id IN (${placeholders})`);
+      params.push(...idList);
+    }
+    if (startDate) { where.push("date >= ?"); params.push(String(startDate)); }
+    if (endDate)   { where.push("date <= ?"); params.push(String(endDate)); }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const rows = db.prepare<any[], any>(`
+      SELECT
+        cctv_id,
+        SUM(motorcycle + car + bus + truck) as total,
+        COUNT(DISTINCT hour) as jam_unik
+      FROM traffic_data ${whereSql}
+      GROUP BY cctv_id
+      ORDER BY cctv_id ASC
+    `).all(...params);
+
+    const data = rows.map((row: any) => {
+      const info = cctvMap.get(row.cctv_id);
+      return {
+        cctv_id: row.cctv_id,
+        id: `${row.cctv_id} - ${info?.lokasi || "Tidak diketahui"}`,
+        total: row.total,
+        jam_unik: row.jam_unik
+      };
+    });
+
+    return res.json({ success: true, data });
 
   } catch (e: any) {
     return res.status(500).json({ success: false, message: e.message });
