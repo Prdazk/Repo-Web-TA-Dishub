@@ -35,7 +35,6 @@ const streams: StreamConfig[] = config.streams || [];
 const ensureDir = (d: string) =>
   !fs.existsSync(d) && fs.mkdirSync(d, { recursive: true });
 
-/* ===================== STREAM ===================== */
 function startStream({ id, ws_url, lokasi }: StreamConfig) {
   if (!id || !ws_url) return;
 
@@ -45,58 +44,79 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   ensureDir(outputDir);
   ensureDir(thumbDir);
 
-  const playlist = path.join(outputDir, "output.m3u8");
+  const playlist = path.join(outputDir, "output.m3u8").replace(/\\/g, "/");
   const thumb = path.join(thumbDir, "latest.jpg");
 
   console.log(`▶ ${lokasi} (${id})`);
 
-  /* ===================== FFMPEG (SEKALI SAJA) ===================== */
-  const ffmpeg: ChildProcessWithoutNullStreams = spawn("ffmpeg", [
-    "-loglevel", "error",
-
-    // INPUT
-    "-fflags", "nobuffer",
-    "-flags", "low_delay",
-    "-analyzeduration", "0",
-    "-probesize", "32",
-    "-f", "mpegts",
-    "-i", "pipe:0",
-    
-    // DROP FRAME
-    "-vsync", "drop",
-
-    // FPS + SCALE
-    "-r", String(STREAM_FPS),
-    "-vf", `scale=-2:${STREAM_HEIGHT}`,
-
-    // ENCODE
-    "-c:v", "libx264",
-    "-preset", "ultrafast",
-    "-tune", "zerolatency",
-    "-profile:v", "baseline",
-    "-pix_fmt", "yuv420p",
-    "-x264opts", "keyint=10:min-keyint=10:no-scenecut",
-    "-bf", "0",
-
-    // HLS
-    "-f", "hls",
-    "-hls_time", "0.4",
-    "-hls_list_size", "3",
-    "-hls_flags", "delete_segments+independent_segments",
-    "-hls_allow_cache", "0",
-    "-hls_segment_filename",
-    path.join(outputDir, "seg_%03d.ts"),
-    playlist
-  ]);
-
-  ffmpeg.on("exit", code => {
-    console.warn(`⚠ FFMPEG exit (${id}) code=${code}`);
-  });
-
-  /* ===================== WS RECONNECT ===================== */
+  let ffmpeg: ChildProcessWithoutNullStreams | null = null;
   let ws: WebSocket | null = null;
   let reconnectTimer: NodeJS.Timeout | null = null;
+  let ffmpegRestartTimer: NodeJS.Timeout | null = null;
 
+  /* ===================== FFMPEG ===================== */
+  function startFFmpeg() {
+    if (ffmpeg) {
+      try { ffmpeg.stdin.destroy(); ffmpeg.kill("SIGKILL"); } catch {}
+      ffmpeg = null;
+    }
+
+    ffmpeg = spawn("ffmpeg", [
+      "-loglevel", "error",
+
+      // INPUT
+      "-fflags", "nobuffer+discardcorrupt",
+      "-flags", "low_delay",
+      "-analyzeduration", "0",
+      "-probesize", "32",
+      "-err_detect", "ignore_err",
+      "-f", "mpegts",
+      "-i", "pipe:0",
+
+      // DROP FRAME
+      "-vsync", "drop",
+
+      // FPS + SCALE
+      "-r", String(STREAM_FPS),
+      "-vf", `scale=-2:${STREAM_HEIGHT}`,
+
+      // ENCODE
+      "-c:v", "libx264",
+      "-preset", "ultrafast",
+      "-tune", "zerolatency",
+      "-profile:v", "baseline",
+      "-pix_fmt", "yuv420p",
+      "-x264opts", "keyint=10:min-keyint=10:no-scenecut",
+      "-bf", "0",
+
+      // HLS
+      "-f", "hls",
+      "-hls_time", "0.5",
+      "-hls_list_size", "5",
+      "-hls_flags", "delete_segments+independent_segments",
+      "-hls_allow_cache", "0",
+      "-hls_segment_filename",
+      path.join(outputDir, "seg_%03d.ts").replace(/\\/g, "/"),
+      playlist
+    ]);
+
+    ffmpeg.stderr.on("data", (data) => {
+      console.warn(`[FFmpeg ${id}] ${data.toString().trim()}`);
+    });
+
+    // ✅ Auto restart kalau FFmpeg mati
+    ffmpeg.on("exit", (code) => {
+    console.warn(`⚠ FFmpeg exit (${id}) code=${code}, restart dalam 5 detik...`);
+    ffmpeg = null;
+    if (ffmpegRestartTimer) return;
+    ffmpegRestartTimer = setTimeout(() => {
+      ffmpegRestartTimer = null;
+      startFFmpeg();
+    }, 5000);
+  });
+  }
+
+  /* ===================== WS RECONNECT ===================== */
   function connectWS() {
     if (ws && ws.readyState === WebSocket.OPEN) return;
 
@@ -109,7 +129,8 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
     ws.on("message", (d) => {
       try {
-        if (ffmpeg.stdin.writable) {
+        // ✅ Cek ffmpeg masih hidup sebelum kirim data
+        if (ffmpeg && ffmpeg.stdin.writable) {
           ffmpeg.stdin.write(d as Buffer);
         }
       } catch {
@@ -130,19 +151,19 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
   function scheduleReconnect() {
     if (reconnectTimer) return;
-
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;
       connectWS();
-    }, 1000); // 1 detik reconnect
+    }, 3000);
   }
 
+  // ✅ Start keduanya
+  startFFmpeg();
   connectWS();
 
   /* ===================== THUMB ===================== */
   setInterval(() => {
     if (!fs.existsSync(playlist)) return;
-
     spawn("ffmpeg", [
       "-loglevel", "error",
       "-y",
@@ -151,9 +172,8 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
       "-q:v", "5",
       thumb
     ]);
-  }, 10_000);
+  }, 30_000);
 }
-
 /* ===================== START ===================== */
 streams.forEach(startStream);
 }

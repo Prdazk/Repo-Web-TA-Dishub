@@ -119,46 +119,169 @@
         drag = false,
         sx = 0,
         sy = 0;
-      let hls = null,
-        lastTime = 0;
+      // ✅ GANTI JADI INI
+        let hls = null;
+        let retryCount = 0;
+        let stallTimer = null;
+        let lastTime = -1;
+        let isDestroyed = false;
 
       const apply = () =>
         (video.style.transform = `translate(${x}px,${y}px) scale(${scale})`);
 
-      function init() {
+      // ✅ PASTE INI DI TEMPAT YANG TADI KOSONG
+
+      function showOverlay(msg) {
         overlay.style.display = "flex";
-        overlay.innerText = "Connecting…";
+        overlay.innerText = msg;
+      }
 
-        if (hls) {
-          hls.destroy();
-          hls = null;
-        }
+      function hideOverlay() {
+        overlay.style.display = "none";
+      }
 
-        if (Hls.isSupported()) {
-          hls = new Hls({ lowLatencyMode: true });
-          hls.loadSource(url);
-          hls.attachMedia(video);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            overlay.style.display = "none";
-            video.play().catch(() => { });
-          });
-          hls.on(Hls.Events.ERROR, (_, d) => {
-            if (d.fatal) {
-              overlay.innerText = "Reconnecting…";
-              setTimeout(init, 1500);
-            }
-          });
-        } else {
-          video.src = url;
+      function startStallWatcher() {
+  clearInterval(stallTimer);
+  let frozenCount = 0;
+
+  stallTimer = setInterval(() => {
+    if (video.paused || video.ended) return;
+
+    // Cek readyState — kalau kurang dari 3 berarti buffer kosong
+    if (video.readyState < 3) {
+      frozenCount++;
+      console.warn(`[HLS] Buffer rendah (readyState=${video.readyState}) count=${frozenCount}`);
+      if (frozenCount >= 2) {
+        console.warn("[HLS] Buffer kosong terlalu lama, reconnect...");
+        frozenCount = 0;
+        retryCount = 0;
+        init();
+      }
+      return;
+    }
+
+    // Reset counter kalau normal
+    frozenCount = 0;
+
+      // Auto sync ke live edge
+      if (hls && hls.liveSyncPosition) {
+        const diff = hls.liveSyncPosition - video.currentTime;
+        if (diff > 3) {
+          console.warn("[HLS] Terlalu jauh dari live, sync...");
+          try { video.currentTime = hls.liveSyncPosition; } catch(e) {}
         }
       }
 
-      setInterval(() => {
-        if (!video.paused) {
-          if (video.currentTime === lastTime) init();
-          lastTime = video.currentTime;
+      // Kalau currentTime benar-benar freeze
+      if (video.currentTime === lastTime) {
+        console.warn("[HLS] Stall terdeteksi, reconnect...");
+        retryCount = 0;
+        init();
+      }
+
+      lastTime = video.currentTime;
+    }, 2000);
+  }
+
+      function init() {
+        if (isDestroyed) return;
+        showOverlay(retryCount > 0 ? `Reconnecting... (#${retryCount})` : "Connecting…");
+
+        if (hls) { hls.destroy(); hls = null; }
+
+        if (!Hls.isSupported()) {
+          video.src = url;
+          video.play().catch(() => {});
+          hideOverlay();
+          return;
         }
-      }, 5000);
+
+        hls = new Hls({
+        lowLatencyMode: true,
+        liveSyncDurationCount: 1,
+        liveMaxLatencyDurationCount: 3,
+        maxBufferLength: 3,
+        maxMaxBufferLength: 6,
+        maxBufferHole: 0.5,
+        manifestLoadingMaxRetry: 10,
+        manifestLoadingRetryDelay: 500,
+        levelLoadingMaxRetry: 10,
+        levelLoadingRetryDelay: 500,
+        fragLoadingMaxRetry: 10,
+        fragLoadingRetryDelay: 500,
+        enableWorker: true,
+        startFragPrefetch: true,
+      });
+
+        hls.loadSource(url);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          retryCount = 0;
+          hideOverlay();
+          video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+          startStallWatcher();
+        });
+
+        hls.on(Hls.Events.ERROR, (_, data) => {
+        console.warn("[HLS] Error:", data.type, data.details, data.fatal);
+
+        if (!data.fatal) {
+          // Buffer stall — sync ke live dulu
+          if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+            console.warn("[HLS] Buffer stall, coba sync ke live...");
+            try {
+              if (hls.liveSyncPosition) {
+                video.currentTime = hls.liveSyncPosition;
+              }
+            } catch(e) {}
+
+            // Kalau 2 detik masih stuck, reconnect
+            setTimeout(() => {
+              if (video.readyState < 3) {
+                console.warn("[HLS] Masih stuck setelah sync, reconnect...");
+                retryCount = 0;
+                init();
+              }
+            }, 2000);
+            return;
+          }
+
+          // Buffer nudge — paksa recover
+          if (data.details === Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL) {
+            console.warn("[HLS] Buffer nudge, paksa reconnect...");
+            retryCount = 0;
+            init();
+            return;
+          }
+
+          return;
+        }
+
+        // Fatal error
+        retryCount++;
+        const delay = Math.min(1500 * retryCount, 10000);
+        showOverlay(`Reconnecting... (#${retryCount})`);
+        setTimeout(init, delay);
+      });
+
+        video.addEventListener("stalled", () => {
+          try {
+            if (hls && hls.liveSyncPosition) video.currentTime = hls.liveSyncPosition;
+          } catch(e) {}
+        });
+
+        video.addEventListener("waiting", () => {
+          setTimeout(() => {
+            if (video.readyState < 3 && hls && hls.liveSyncPosition) {
+              try { video.currentTime = hls.liveSyncPosition; } catch(e) {}
+            }
+          }, 3000);
+        });
+      }
 
       video.addEventListener(
         "wheel",
@@ -216,6 +339,23 @@
 
       init();
 
+      // ✅ Auto recovery saat tab aktif kembali
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          console.warn("[HLS] Tab aktif kembali, sync ke live...");
+          retryCount = 0;
+          init();
+        }
+      });
+
+      // ✅ Auto recovery saat koneksi internet kembali
+      window.addEventListener("online", () => {
+        console.warn("[HLS] Internet kembali, reconnect...");
+        retryCount = 0;
+        init();
+      });
+
+      // ✅ BARU — hanya tambah destroy() di paling bawah
       return {
         zoomIn() {
           scale = Math.min(scale + 0.2, 5);
@@ -227,17 +367,20 @@
           apply();
         },
         reset() {
-        scale = 1;
-        x = 0;
-        y = 0;
-        apply();
-
-        // refresh stream
-        init();
+          scale = 1;
+          x = 0;
+          y = 0;
+          apply();
+          init();
         },
         fullscreen() {
           video.requestFullscreen?.();
         },
+        destroy() {
+          isDestroyed = true;
+          clearInterval(stallTimer);
+          hls?.destroy();
+        }
       };
     }
   </script>

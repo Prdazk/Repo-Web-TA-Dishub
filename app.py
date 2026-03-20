@@ -18,9 +18,9 @@ from src.routes.apiSignal import app
 MODEL_PATH = "models/yolov8n.pt"
 DB_PATH = "db/traffic.db"
 
-WIDTH = 480
-HEIGHT = 240
-CONF_TH = 0.40
+WIDTH = 640
+HEIGHT = 360
+CONF_TH = 0.55
 FRAME_SKIP = 8
 COUNT_INTERVAL = 7
 MAX_PROC = 2
@@ -285,7 +285,7 @@ def run_cctv(cctv_id, hls_url):
                     if frame_id % FRAME_SKIP == 0:
                         results = model.predict(
                             frame,
-                            imgsz=256,
+                            imgsz=416,
                             conf=CONF_TH,
                             device="cpu",
                             verbose=False
