@@ -38,6 +38,9 @@ export default function createApp() {
   app.use("/hls", hlsRouter);
   app.use("/api", apiRouter);
   // ERRORS
+  app.get("/.well-known/appspecific/com.chrome.devtools.json", (_req, res) => {
+    res.status(204).end();
+  });
   app.use(notFound);
   app.use(serverError);
 

@@ -67,8 +67,8 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
       // INPUT
       "-fflags", "nobuffer+discardcorrupt",
       "-flags", "low_delay",
-      "-analyzeduration", "0",
-      "-probesize", "32",
+      "-analyzeduration", "500000",
+      "-probesize", "500000",
       "-err_detect", "ignore_err",
       "-f", "mpegts",
       "-i", "pipe:0",
@@ -101,7 +101,10 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
     ]);
 
     ffmpeg.stderr.on("data", (data) => {
-      console.warn(`[FFmpeg ${id}] ${data.toString().trim()}`);
+      const msg = data.toString().trim();
+      if (!msg.includes("Invalid frame dimensions")) {
+        console.warn(`[FFmpeg ${id}] ${msg}`);
+      }
     });
 
     // ✅ Auto restart kalau FFmpeg mati
@@ -112,7 +115,7 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
     ffmpegRestartTimer = setTimeout(() => {
       ffmpegRestartTimer = null;
       startFFmpeg();
-    }, 5000);
+    }, 2000);
   });
   }
 
@@ -152,9 +155,9 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   function scheduleReconnect() {
     if (reconnectTimer) return;
     reconnectTimer = setTimeout(() => {
-      reconnectTimer = null;
-      connectWS();
-    }, 3000);
+    reconnectTimer = null;
+    connectWS();
+  }, 1000);
   }
 
   // ✅ Start keduanya

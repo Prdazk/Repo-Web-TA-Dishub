@@ -8,9 +8,8 @@
         <%= process.env.TITLE_WEB || title %>
     </title>
     <link rel="icon" href="../../logo.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
-        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -52,8 +51,11 @@
             <div class="cctv-grid">
                 <% streams.forEach(s=> { %>
                     <div class="video-box" onclick="openMonitor('<%= s.id %>')">
-                        <div class="video-thumb"
-                            style="background-image:url('/thumb/<%= s.id %>/latest.jpg');background-size:cover;height:240px;"></div>
+                        <div class="video-thumb" style="height:240px;overflow:hidden;background:#1e293b;">
+                            <img src="/thumb/<%= s.id %>/latest.jpg"
+                                style="width:100%;height:100%;object-fit:cover;"
+                                onerror="this.style.display='none'">
+                        </div>
                         <div style="padding:10px 4px 4px;">
                             <%= s.lokasi %>
                         </div>
@@ -106,7 +108,7 @@
                     <small id="labelJamTertinggi" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
                 <div class="card" style="padding:20px 22px;">
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">〰️ Jam Arus Rata Rata</span>
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">〰️ Jam Arus Menengah</span>
                     <div id="jamMenengah" style="margin-top:8px;"></div>
                     <small id="labelJamMenengah" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
@@ -574,7 +576,7 @@
                     if (el) el.innerText = jamLabel === "data kemarin" ? "📅 Menampilkan data kemarin" : "";
                 });
 
-                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni, dateMap);
+                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni);
  
             } catch (e) {
                 console.error(e);
@@ -583,7 +585,7 @@
             }
         }
 
-        function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamArusData, perLokasiHariIni, dateMap) {
+        function renderRiwayat(totalDB, totalHalaman, lokasiSet, jamArusData, perLokasiHariIni) {
         document.getElementById("totalLokasi").innerText = cctv.split(',').length;
         document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
 
@@ -1237,11 +1239,15 @@
         loadKendaraan();
         loadRiwayat();
 
-            setInterval(() => loadKendaraan(), 10000);
-        setInterval(() => {
+            let autoRefreshTimer = setInterval(() => {
             const activeTab = localStorage.getItem("activeTab") || "dashboard";
-            if (activeTab === "riwayat") loadRiwayat();
-        }, 15000);
+            if (activeTab === "riwayat") {
+                loadRiwayat();
+            } else {
+                loadKendaraan();
+            }
+        }, 10000);
+
     </script>
 </body>
 
