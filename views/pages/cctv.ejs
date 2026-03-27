@@ -300,10 +300,11 @@
         </footer>
     </div>
 
-    <script>
-        let arusChartInstance = null;
-        let lastData = []; // menyimpan data asli dari API
-        let _perLokasiHariIni = {}; // ← tambah ini
+    <script>        
+            let arusChartInstance = null;
+            let lastData = [];
+            let _perLokasiHariIni = {};
+            let dateMap = {};  // ← TAMBAH INI
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = () => {
@@ -486,7 +487,7 @@
                 let totalSemua = 0;
                 let lokasiSet = new Set();
                 let jamMap = {};
-                let dateMap = {}; // ← tambah ini
+                dateMap = {}; // ← tambah ini
 
                 (j.data || []).forEach(d => {
                     const total = d.motorcycle + d.car + d.bus + d.truck;
@@ -643,7 +644,7 @@
                         </div>
                         <div style="text-align:right;min-width:60px;">
                             <div style="font-size:17px;font-weight:900;color:${warnaRow[i % warnaRow.length]};line-height:1;">${total.toLocaleString('id-ID')}</div>
-                            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">kend.</div>
+                            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">kendaraan.</div>
                         </div>
                     </div>`;
 
