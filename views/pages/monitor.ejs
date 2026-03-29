@@ -120,11 +120,12 @@
         sx = 0,
         sy = 0;
       // ✅ GANTI JADI INI
-        let hls = null;
+       let hls = null;
         let retryCount = 0;
         let stallTimer = null;
         let lastTime = -1;
         let isDestroyed = false;
+        let isReconnecting = false;
 
       const apply = () =>
         (video.style.transform = `translate(${x}px,${y}px) scale(${scale})`);
@@ -142,7 +143,8 @@
 
       function startStallWatcher() {
   clearInterval(stallTimer);
-  let frozenCount = 0;
+  let frozenCount = 0;   // untuk readyState < 3
+  let freezeCount = 0;   // untuk currentTime freeze
 
   stallTimer = setInterval(() => {
     if (video.paused || video.ended) return;
@@ -151,7 +153,7 @@
     if (video.readyState < 3) {
       frozenCount++;
       console.warn(`[HLS] Buffer rendah (readyState=${video.readyState}) count=${frozenCount}`);
-      if (frozenCount >= 2) {
+      if (frozenCount >= 5) {
         console.warn("[HLS] Buffer kosong terlalu lama, reconnect...");
         frozenCount = 0;
         retryCount = 0;
@@ -174,20 +176,30 @@
 
       // Kalau currentTime benar-benar freeze
       if (video.currentTime === lastTime) {
-        console.warn("[HLS] Stall terdeteksi, reconnect...");
-        retryCount = 0;
-        init();
+        freezeCount++;
+        console.warn(`[HLS] Freeze terdeteksi count=${freezeCount}`);
+        if (freezeCount >= 5) {
+          freezeCount = 0;
+          retryCount = 0;
+          init();
+        }
+      } else {
+        freezeCount = 0;
+        lastTime = video.currentTime;
       }
+      }, 2000);
+    }
 
-      lastTime = video.currentTime;
-    }, 2000);
-  }
+        function init() {
+      if (isDestroyed) return;
+      if (isReconnecting) return;
+      isReconnecting = true;
+      setTimeout(() => { isReconnecting = false; }, 3000);
 
-      function init() {
-        if (isDestroyed) return;
-        showOverlay(retryCount > 0 ? `Reconnecting... (#${retryCount})` : "Connecting…");
+      clearInterval(stallTimer);
+      showOverlay(retryCount > 0 ? `Reconnecting... (#${retryCount})` : "Connecting…");
 
-        if (hls) { hls.destroy(); hls = null; }
+      if (hls) { hls.destroy(); hls = null; }
 
         if (!Hls.isSupported()) {
           video.src = url;
@@ -198,10 +210,10 @@
 
         hls = new Hls({
         lowLatencyMode: true,
-        liveSyncDurationCount: 1,
-        liveMaxLatencyDurationCount: 3,
-        maxBufferLength: 3,
-        maxMaxBufferLength: 6,
+        liveSyncDurationCount: 2,
+        liveMaxLatencyDurationCount: 5,
+        maxBufferLength: 8,
+        maxMaxBufferLength: 16,
         maxBufferHole: 0.5,
         manifestLoadingMaxRetry: 10,
         manifestLoadingRetryDelay: 500,
@@ -246,15 +258,7 @@
                 retryCount = 0;
                 init();
               }
-            }, 2000);
-            return;
-          }
-
-          // Buffer nudge — paksa recover
-          if (data.details === Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL) {
-            console.warn("[HLS] Buffer nudge, paksa reconnect...");
-            retryCount = 0;
-            init();
+            }, 5000);
             return;
           }
 
@@ -263,25 +267,30 @@
 
         // Fatal error
         retryCount++;
-        const delay = Math.min(1500 * retryCount, 10000);
+        const delay = Math.min(2000 * Math.pow(2, retryCount - 1), 30000);
         showOverlay(`Reconnecting... (#${retryCount})`);
         setTimeout(init, delay);
       });
 
-        video.addEventListener("stalled", () => {
-          try {
-            if (hls && hls.liveSyncPosition) video.currentTime = hls.liveSyncPosition;
-          } catch(e) {}
-        });
-
-        video.addEventListener("waiting", () => {
-          setTimeout(() => {
-            if (video.readyState < 3 && hls && hls.liveSyncPosition) {
-              try { video.currentTime = hls.liveSyncPosition; } catch(e) {}
-            }
-          }, 3000);
-        });
       }
+
+      video.addEventListener("stalled", () => {
+        setTimeout(() => {
+          try {
+            if (hls && hls.liveSyncPosition && isFinite(hls.liveSyncPosition)) {
+              video.currentTime = hls.liveSyncPosition;
+            }
+          } catch(e) {}
+        }, 1000);
+      });
+
+      video.addEventListener("waiting", () => {
+        setTimeout(() => {
+          if (video.readyState < 3 && hls && hls.liveSyncPosition) {
+            try { video.currentTime = hls.liveSyncPosition; } catch(e) {}
+          }
+        }, 3000);
+      });
 
       video.addEventListener(
         "wheel",
@@ -342,11 +351,14 @@
       // ✅ Auto recovery saat tab aktif kembali
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-          console.warn("[HLS] Tab aktif kembali, sync ke live...");
-          retryCount = 0;
-          init();
+            setTimeout(() => {
+                if (video.readyState === 0 || video.paused) {
+                    retryCount = 0;
+                    init();
+                }
+            }, 1500);  // cek setelah 1.5 detik, reconnect hanya kalau perlu
         }
-      });
+    });
 
       // ✅ Auto recovery saat koneksi internet kembali
       window.addEventListener("online", () => {
