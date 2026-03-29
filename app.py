@@ -258,9 +258,10 @@ def run_cctv(cctv_id, hls_url):
             "-g", "24",
             "-sc_threshold", "0",
             "-f", "hls",
-            "-hls_time", "1",
-            "-hls_list_size", "5",
-            "-hls_flags", "delete_segments+independent_segments",
+            "-hls_time", "2",
+            "-hls_list_size", "10",
+            "-hls_flags", "independent_segments",
+            "-hls_delete_threshold", "10",
             out_hls
         ]
 
