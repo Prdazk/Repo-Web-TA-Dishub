@@ -90,6 +90,7 @@
                 <div class="summary-grid">
                 <div class="card" onclick="bukaModalKendaraan()" style="cursor:pointer;padding:14px 20px;" title="Klik untuk detail per lokasi">
                     <span style="font-size:11px;">Total Kendaraan Hari Ini</span>
+                    <div id="labelHariIni" style="font-size:10px;color:#9ca3af;margin-top:2px;"></div>
                     <h3 id="totalRiwayat" style="margin:4px 0;font-size:28px;line-height:1.1;">0</h3>
                     <div id="totalPerLokasi" style="margin-top:4px;font-size:12px;color:#9ca3af;line-height:1.8;"></div>
                     <small style="color:#10b981;font-size:11px;margin-top:4px;display:block;">🔍 Klik untuk detail</small>
@@ -444,11 +445,8 @@
         }
 
         function buildListUrl() {
-            // Ambil dari input modal, fallback ke localStorage kalau input kosong
-            const startDate = document.getElementById("startDate").value
-                           || localStorage.getItem("filterStartDate") || "";
-            const endDate = document.getElementById("endDate").value
-                         || localStorage.getItem("filterEndDate") || "";
+        const startDate = localStorage.getItem("filterStartDate") || "";
+        const endDate = localStorage.getItem("filterEndDate") || "";
 
             const params = new URLSearchParams();
             params.set("ids", cctv);
@@ -523,6 +521,17 @@
                 renderPagination(totalPage);
 
                 const today = new Date().toISOString().split('T')[0];
+
+                // ← TAMBAHKAN INI
+                const labelHariIni = document.getElementById("labelHariIni");
+                if (labelHariIni) {
+                    const filterStart = localStorage.getItem("filterStartDate");
+                    if (filterStart && filterStart !== today) {
+                        labelHariIni.innerText = "⚠️ Selalu menampilkan data hari ini";
+                    } else {
+                        labelHariIni.innerText = "";
+                    }
+                }
                 const summaryParams = new URLSearchParams();
                 summaryParams.set("ids", cctv);
                 summaryParams.set("startDate", today);
@@ -549,7 +558,7 @@
                 const maxJamUnik = (jPerLokasi.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
                 let jamLabel = "hari ini";
 
-                if (maxJamUnik < 2) {
+                if (maxJamUnik < 1) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yDate = yesterday.toISOString().split('T')[0];
@@ -565,7 +574,7 @@
                     ]);
 
                     const maxJamUnikKemarin = (jPerLokasiY.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
-                    if (maxJamUnikKemarin >= 2) {
+                    if (maxJamUnikKemarin >= 1) {
                         jamArusData = jJamY.data || [];
                         jamLabel = "data kemarin";
                     }
@@ -608,16 +617,14 @@
                     .map(([jam, total]) => ({ jam: parseInt(jam), total }))
                     .sort((a, b) => b.total - a.total);
                 if (arr.length === 0) return null;
-                const totalAll = arr.reduce((s, j) => s + j.total, 0);
-                const rata = totalAll / arr.length;
-                const jamRata = arr.reduce((closest, j) =>
-                    Math.abs(j.total - rata) < Math.abs(closest.total - rata) ? j : closest
-                );
+                const arrSortedByJam = [...arr].sort((a, b) => a.jam - b.jam);
+                const medianIdx = Math.floor(arrSortedByJam.length / 2);
+                const jamMedian = arrSortedByJam[medianIdx];
                 return {
                     id,
                     tertinggi: arr[0],
                     terendah: arr[arr.length - 1],
-                    rata: { jam: jamRata.jam, nilai: Math.round(rata) }
+                    rata: { jam: jamMedian.jam, nilai: jamMedian.total }
                 };
             }).filter(Boolean);
 
@@ -694,32 +701,7 @@
             }
         });
 
-        // ====== LIST RIWAYAT ======
-        let dateArray = Object.entries(dateMap)
-            .map(([tgl, total]) => ({ tgl, total }))
-            .sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
-
-        let dateLokasiMap = {};
-        lastData.forEach(row => {
-            if (!dateLokasiMap[row.date]) dateLokasiMap[row.date] = {};
-            if (!dateLokasiMap[row.date][row.id]) dateLokasiMap[row.date][row.id] = 0;
-            dateLokasiMap[row.date][row.id] += row.motorcycle + row.car + row.bus + row.truck;
-        });
-
-        listR.innerHTML = dateArray.map(d => {
-            const lokasiEntries = Object.entries(dateLokasiMap[d.tgl] || {});
-            return lokasiEntries.map(([id, totalLokasi]) => `
-                <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;margin-bottom:8px;
-                    background:#f9fafb;border-left:4px solid #10b981;border-radius:8px;font-size:14px;
-                    color:#374151;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
-                    <span style="font-weight:600;color:#111827;min-width:150px;">📅 ${formatTanggal(d.tgl)}</span>
-                    <span style="color:#9ca3af;">•</span>
-                    <span style="color:#374151;flex:1;">📍 ${id}</span>
-                    <span style="color:#9ca3af;">•</span>
-                    <span style="font-weight:700;color:#10b981;">Total ${totalLokasi.toLocaleString('id-ID')} Kendaraan</span>
-                </div>
-            `).join('');
-        }).join('');
+        
     } // tutup function renderRiwayat
 
        function renderPagination(totalPage) {
