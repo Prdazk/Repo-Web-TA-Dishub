@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css" />
     <script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -49,18 +50,21 @@
             <p id="message-health"></p>
 
             <div class="cctv-grid">
-                <% streams.forEach(s=> { %>
+                <% streams.forEach((s, index)=> { %>
                     <div class="video-box" onclick="openMonitor('<%= s.id %>')">
-                        <div class="video-thumb" style="height:240px;overflow:hidden;background:#1e293b;">
+                        <div class="video-thumb" style="height:240px;overflow:hidden;background:#1e293b;position:relative;">
                             <img src="/thumb/<%= s.id %>/latest.jpg"
                                 style="width:100%;height:100%;object-fit:cover;"
                                 onerror="this.style.display='none'">
+                            <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#10b981;font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:1px;">
+                                CCTV <%= index + 1 %>
+                            </div>
                         </div>
-                        <div style="padding:10px 4px 4px;">
+                        <div style="padding:12px 5px 4px;">
                             <%= s.lokasi %>
                         </div>
                     </div>
-                    <% }) %>
+                <% }) %>
             </div>
 
            <div class="dashboard-summary">
@@ -305,7 +309,6 @@
             let arusChartInstance = null;
             let lastData = [];
             let _perLokasiHariIni = {};
-            let dateMap = {};  // ← TAMBAH INI
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = () => {
@@ -460,7 +463,11 @@
             return `/api/db/list?${params.toString()}`;
         }
 
+        let isLoadingKendaraan = false;
+
         async function loadKendaraan() {
+            if (isLoadingKendaraan) return;
+            isLoadingKendaraan = true;
             try {
                 // clear pesan (nanti diisi lagi kalau ada error)
                 document.getElementById("message-health").innerText = "";
@@ -484,26 +491,12 @@
 
                 let totalSemua = 0;
                 let lokasiSet = new Set();
-                let jamMap = {};
-                dateMap = {}; // ← tambah ini
 
                 (j.data || []).forEach(d => {
                     const total = d.motorcycle + d.car + d.bus + d.truck;
 
                     totalSemua += total;
                     lokasiSet.add(d.id);
- 
-                    const jamKey = parseInt(d.hour, 10);
-                        if (!jamMap[jamKey]) {
-                            jamMap[jamKey] = 0;
-                        }
-                        jamMap[jamKey] += total;
-
-                    // ← tambah ini
-                    if (!dateMap[d.date]) {
-                        dateMap[d.date] = 0;
-                    }
-                    dateMap[d.date] += total;
 
                     tableK.innerHTML += `
                         <tr>
@@ -592,6 +585,8 @@
                 console.error(e);
                 document.getElementById("message-health").innerText =
                     "Terjadi error saat memuat data. Cek console / API.";
+            } finally {
+                isLoadingKendaraan = false; // ← wajib ada agar bisa load lagi
             }
         }
 
@@ -609,7 +604,7 @@
             lokasiIds.forEach(id => { jamPerLokasi[id] = {}; });
             jamArusData.forEach(row => {
                 const jam = parseInt(row.hour, 10);
-                jamPerLokasi[row.id][jam] = row.total; // sudah teragregasi dari backend
+                jamPerLokasi[row.id][jam] = row.total; 
             });
 
             const hasilPerLokasi = lokasiIds.map(id => {
@@ -617,9 +612,8 @@
                     .map(([jam, total]) => ({ jam: parseInt(jam), total }))
                     .sort((a, b) => b.total - a.total);
                 if (arr.length === 0) return null;
-                const arrSortedByJam = [...arr].sort((a, b) => a.jam - b.jam);
-                const medianIdx = Math.floor(arrSortedByJam.length / 2);
-                const jamMedian = arrSortedByJam[medianIdx];
+                const medianIdx = Math.floor(arr.length / 2);
+                const jamMedian = arr[medianIdx]; 
                 return {
                     id,
                     tertinggi: arr[0],
@@ -725,7 +719,6 @@
             prevBtn.onclick = () => { if (currentPage > 1) changePage(currentPage - 1); };
             pagination.appendChild(prevBtn);
 
-            // Halaman pertama + dots jika perlu
             if (startPage > 1) {
                 const firstBtn = document.createElement('button');
                 firstBtn.className = 'page-btn';
@@ -932,64 +925,28 @@
                 return;
             }
 
+            let totalKeseluruhan = 0;
+
+            // Susun data untuk SheetJS
+            const wsData = [
+                ["CCTV", "Tanggal", "Jam", "Motor", "Mobil", "Bus", "Truk", "Total"]
+            ];
+            j.data.forEach(d => {
+                const total = d.motorcycle + d.car + d.bus + d.truck;
+                totalKeseluruhan += total;
+                wsData.push([d.id, d.date, d.hour + ":00", d.motorcycle, d.car, d.bus, d.truck, total]);
+            });
+            wsData.push(["TOTAL KESELURUHAN", "", "", "", "", "", "", totalKeseluruhan]);
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
             const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
-                          "Juli","Agustus","September","Oktober","November","Desember"];
+              "Juli","Agustus","September","Oktober","November","Desember"];
             const tglObj = new Date(tglInput + 'T00:00:00');
             const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
 
-            let totalKeseluruhan = 0;
-            const rows = j.data.map(d => {
-                const total = d.motorcycle + d.car + d.bus + d.truck;
-                totalKeseluruhan += total;
-                return `<tr>
-                    <td>${d.id}</td>
-                    <td>${d.date}</td>
-                    <td>${d.hour}:00</td>
-                    <td>${d.motorcycle}</td>
-                    <td>${d.car}</td>
-                    <td>${d.bus}</td>
-                    <td>${d.truck}</td>
-                    <td>${total}</td>
-                </tr>`;
-            }).join('');
-
-            const blob = new Blob([`
-                <html>
-                <head><meta charset="UTF-8"></head>
-                <body>
-                    <h3>Laporan Data Kendaraan - ${tglFormatted}</h3>
-                    <table border="1">
-                        <thead>
-                            <tr>
-                                <th>CCTV</th>
-                                <th>Tanggal</th>
-                                <th>Jam</th>
-                                <th>Motor</th>
-                                <th>Mobil</th>
-                                <th>Bus</th>
-                                <th>Truk</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                            <tr>
-                                <td colspan="7"><strong>TOTAL KESELURUHAN</strong></td>
-                                <td><strong>${totalKeseluruhan}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `Data_Kendaraan_${tglInput}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            XLSX.utils.book_append_sheet(wb, ws, "Data Kendaraan");
+            XLSX.writeFile(wb, `Data_Kendaraan_${tglFormatted}.xlsx`);
         }
 
         // ====== RIWAYAT PAGINATION ======
@@ -1222,14 +1179,15 @@
         loadKendaraan();
         loadRiwayat();
 
-            let autoRefreshTimer = setInterval(() => {
-            const activeTab = localStorage.getItem("activeTab") || "dashboard";
-            if (activeTab === "riwayat") {
-                loadRiwayat();
-            } else {
-                loadKendaraan();
-            }
-        }, 10000);
+            if (window._autoRefreshTimer) clearInterval(window._autoRefreshTimer);
+            window._autoRefreshTimer = setInterval(() => {
+                const activeTab = localStorage.getItem("activeTab") || "dashboard";
+                if (activeTab === "riwayat") {
+                    loadRiwayat();
+                } else {
+                    loadKendaraan();
+                }
+            }, 10000);
 
     </script>
 </body>
