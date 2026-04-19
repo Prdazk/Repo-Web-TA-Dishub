@@ -310,18 +310,7 @@
             let lastData = [];
             let _perLokasiHariIni = {};
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.onclick = () => {
-                const target = btn.dataset.target;
-
-                localStorage.setItem("activeTab", target);
-
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-                document.getElementById(target).classList.add('active');
-            }
-        });
+        
 
         function openMonitor(id) {
             location.href = '/monitor/' + id;
@@ -404,7 +393,6 @@
         }
 
         const tableK = document.getElementById('tableKendaraan');
-        const listR = document.getElementById('listRiwayat');
 
         let cctv = "<%= streams.map(s => s.id).join(',') %>";
         let currentPage = 1;
@@ -418,13 +406,22 @@
         }
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                }
-            });
-        });
+        btn.onclick = () => {
+            const target = btn.dataset.target;
+
+            localStorage.setItem("activeTab", target);
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+    });
 
         const pagination = document.getElementById('pagination');
         
@@ -445,6 +442,7 @@
         if (savedPage) {
             const p = parseInt(savedPage, 10);
             if (!isNaN(p) && p > 0) currentPage = p;
+            // validasi final terhadap totalPage dilakukan di dalam loadKendaraan()
         }
 
         function buildListUrl() {
@@ -487,7 +485,13 @@
                 pagination.innerHTML = '';
 
                 let totalData = j.total || 0;
-                let totalPage = Math.ceil(totalData / limit);
+                let totalPage = Math.ceil(totalData / limit) || 1;
+
+                // Validasi currentPage agar tidak melebihi totalPage
+                if (currentPage > totalPage) {
+                    currentPage = totalPage;
+                    localStorage.setItem("currentPage", String(currentPage));
+                }
 
                 let totalSemua = 0;
                 let lokasiSet = new Set();
@@ -531,27 +535,24 @@
                 summaryParams.set("endDate", today);
 
                 // Fetch summary, per-lokasi, dan jam-arus secara PARALLEL
-                const [jSummary, jPerLokasi, jJamArus] = await Promise.all([
-                    fetch(`/api/db/summary?${summaryParams.toString()}`).then(r => r.json()),
-                    fetch(`/api/db/per-lokasi?${summaryParams.toString()}`).then(r => r.json()),
-                    fetch(`/api/db/jam-arus?${summaryParams.toString()}`).then(r => r.json())
-                ]);
+                // Fetch snapshot — 1 request, 1 waktu, semua konsisten
+                const snap = await fetch(`/api/db/dashboard-snapshot?${summaryParams.toString()}`).then(r => r.json());
 
-                // Simpan per-lokasi ke variabel biasa (tidak pakai window.*)
+                // Simpan per-lokasi dari snapshot
                 const perLokasiHariIni = {};
-                (jPerLokasi.data || []).forEach(row => {
+                (snap.perLokasi || []).forEach(row => {
                     perLokasiHariIni[row.id] = row.total;
                 });
                 _perLokasiHariIni = perLokasiHariIni;
 
-                // Susun jamArusData dari response baru (per cctv_id + hour)
-                let jamArusData = jJamArus.data || [];
-
-                // Cek apakah perlu fallback ke kemarin (pakai jam_unik dari /db/per-lokasi)
-                const maxJamUnik = (jPerLokasi.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
+                let jamArusData = snap.jamArus || [];
                 let jamLabel = "hari ini";
 
-                if (maxJamUnik < 1) {
+                // Fallback ke kemarin kalau hari ini belum ada data
+                const totalKendaraanHariIni = snap.total_kendaraan ?? 0;
+                const maxJamUnik = (snap.perLokasi || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
+
+                if (totalKendaraanHariIni === 0) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yDate = yesterday.toISOString().split('T')[0];
@@ -560,15 +561,10 @@
                     yParams.set("startDate", yDate);
                     yParams.set("endDate", yDate);
 
-                    // Fallback juga parallel
-                    const [jJamY, jPerLokasiY] = await Promise.all([
-                        fetch(`/api/db/jam-arus?${yParams.toString()}`).then(r => r.json()),
-                        fetch(`/api/db/per-lokasi?${yParams.toString()}`).then(r => r.json())
-                    ]);
-
-                    const maxJamUnikKemarin = (jPerLokasiY.data || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
+                    const snapY = await fetch(`/api/db/dashboard-snapshot?${yParams.toString()}`).then(r => r.json());
+                    const maxJamUnikKemarin = (snapY.perLokasi || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
                     if (maxJamUnikKemarin >= 1) {
-                        jamArusData = jJamY.data || [];
+                        jamArusData = snapY.jamArus || [];
                         jamLabel = "data kemarin";
                     }
                 }
@@ -579,7 +575,7 @@
                     if (el) el.innerText = jamLabel === "data kemarin" ? "📅 Menampilkan data kemarin" : "";
                 });
 
-                renderRiwayat(jSummary.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni);
+                renderRiwayat(snap.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni);
  
             } catch (e) {
                 console.error(e);
@@ -612,6 +608,12 @@
                     .map(([jam, total]) => ({ jam: parseInt(jam), total }))
                     .sort((a, b) => b.total - a.total);
                 if (arr.length === 0) return null;
+                                // ========================================
+                // LOGIKA JAM ARUS - UNTUK SIDANG TA
+                // tertinggi = arr[0]         → nilai terbesar setelah sort descending
+                // menengah  = arr[tengah]    → nilai median (posisi tengah array)
+                // terendah  = arr[terakhir]  → nilai terkecil (elemen paling akhir)
+                // ========================================
                 const medianIdx = Math.floor(arr.length / 2);
                 const jamMedian = arr[medianIdx]; 
                 return {
@@ -790,51 +792,57 @@
         }
 
         async function doExportPDF() {
-            const tglInput = document.getElementById("pdfTanggal").value;
-            if (!tglInput) {
-                alert("Pilih tanggal terlebih dahulu!");
-                return;
-            }
+        const tglInput = document.getElementById("pdfTanggal").value;
+        if (!tglInput) {
+            alert("Pilih tanggal terlebih dahulu!");
+            return;
+        }
 
-            closePDFModal();
+        closePDFModal();
 
-            const params = new URLSearchParams();
-            params.set("ids", cctv);
-            params.set("page", "1");
-            params.set("limit", "1000");
-            params.set("startDate", tglInput);
-            params.set("endDate", tglInput);
+        // Buka window dulu sebelum await agar tidak diblokir browser
+        const win = window.open("", "", "width=1000,height=700");
+        if (!win) {
+            alert("Popup diblokir browser. Izinkan popup untuk halaman ini.");
+            return;
+        }
 
-            const r = await fetch(`/api/db/list?${params.toString()}`);
-            const j = await r.json();
+        const params = new URLSearchParams();
+        params.set("ids", cctv);
+        params.set("page", "1");
+        params.set("limit", "1000");
+        params.set("startDate", tglInput);
+        params.set("endDate", tglInput);
 
-            if (!j.data || j.data.length === 0) {
-                alert(`Tidak ada data untuk tanggal ${tglInput}`);
-                return;
-            }
+        const r = await fetch(`/api/db/list?${params.toString()}`);
+        const j = await r.json();
 
-            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
-                          "Juli","Agustus","September","Oktober","November","Desember"];
-            const tglObj = new Date(tglInput + 'T00:00:00');
-            const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+        if (!j.data || j.data.length === 0) {
+            win.close();
+            alert(`Tidak ada data untuk tanggal ${tglInput}`);
+            return;
+        }
 
-            let totalKeseluruhan = 0;
-            const rows = j.data.map(d => {
-                const total = d.motorcycle + d.car + d.bus + d.truck;
-                totalKeseluruhan += total;
-                return `<tr>
-                    <td>${d.id}</td>
-                    <td>${d.date}</td>
-                    <td>${d.hour}:00</td>
-                    <td>${d.motorcycle}</td>
-                    <td>${d.car}</td>
-                    <td>${d.bus}</td>
-                    <td>${d.truck}</td>
-                    <td><strong>${total}</strong></td>
-                </tr>`;
-            }).join('');
+        const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                    "Juli","Agustus","September","Oktober","November","Desember"];
+        const tglObj = new Date(tglInput + 'T00:00:00');
+        const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
 
-            const win = window.open("", "", "width=1000,height=700");
+        let totalKeseluruhan = 0;
+        const rows = j.data.map(d => {
+            const total = d.motorcycle + d.car + d.bus + d.truck;
+            totalKeseluruhan += total;
+            return `<tr>
+                <td>${d.id}</td>
+                <td>${d.date}</td>
+                <td>${d.hour}:00</td>
+                <td>${d.motorcycle}</td>
+                <td>${d.car}</td>
+                <td>${d.bus}</td>
+                <td>${d.truck}</td>
+                <td><strong>${total}</strong></td>
+            </tr>`;
+        }).join('');
             win.document.write(`
                 <html>
                 <head>
@@ -1036,12 +1044,12 @@
             return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
         }
 
-        async function loadRiwayat() {
-            try {
-                const r = await fetch(buildRiwayatUrl());
-                const j = await r.json();
-                const listR = document.getElementById("listRiwayat");
-                const pagR = document.getElementById("paginationRiwayat");
+       async function loadRiwayat() {
+        try {
+        const r = await fetch(buildRiwayatUrl());
+        const j = await r.json();
+        const listR = document.getElementById("listRiwayat");
+        const pagR = document.getElementById("paginationRiwayat");
 
                 listR.innerHTML = '';
                 pagR.innerHTML = '';
@@ -1084,7 +1092,7 @@
                     }).join('');
 
                 // Render pagination riwayat
-                const totalPage = Math.ceil(j.total / riwayatLimit);
+                const totalPage = Math.ceil((j.total || 0) / riwayatLimit) || 1;
                 renderRiwayatPagination(totalPage, pagR);
 
             } catch (e) {

@@ -447,4 +447,88 @@ router.get("/db/per-lokasi", (req: any, res: any) => {
   }
 });
 
+// ============================
+// ROUTE /db/dashboard-snapshot
+// ============================
+router.get("/db/dashboard-snapshot", (req: any, res: any) => {
+  try {
+    const { ids, startDate, endDate } = req.query;
+    const { cctvMap } = loadCctvMap();
+
+    const idList = ids
+      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      : [];
+
+    const db = getDb();
+    const where: string[] = [];
+    const params: any[] = [];
+
+    if (idList.length > 0) {
+      const placeholders = idList.map(() => "?").join(", ");
+      where.push(`cctv_id IN (${placeholders})`);
+      params.push(...idList);
+    }
+    if (startDate) { where.push("date >= ?"); params.push(String(startDate)); }
+    if (endDate)   { where.push("date <= ?"); params.push(String(endDate)); }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const snapshot = db.transaction(() => {
+      const summary = db.prepare<any[], any>(`
+        SELECT COALESCE(SUM(motorcycle+car+bus+truck),0) as total_kendaraan
+        FROM traffic_data ${whereSql}
+      `).get(...params);
+
+      const perLokasi = db.prepare<any[], any>(`
+        SELECT cctv_id,
+               SUM(motorcycle+car+bus+truck) as total,
+               COUNT(DISTINCT hour) as jam_unik
+        FROM traffic_data ${whereSql}
+        GROUP BY cctv_id
+        ORDER BY cctv_id ASC
+      `).all(...params);
+
+      const jamArus = db.prepare<any[], any>(`
+        SELECT cctv_id, hour,
+               SUM(motorcycle+car+bus+truck) as total
+        FROM traffic_data ${whereSql}
+        GROUP BY cctv_id, hour
+        ORDER BY cctv_id, CAST(hour AS INTEGER) ASC
+      `).all(...params);
+
+      return { summary, perLokasi, jamArus };
+    })();
+
+    const perLokasiMapped = snapshot.perLokasi.map((row: any) => {
+      const info = cctvMap.get(row.cctv_id);
+      return {
+        cctv_id: row.cctv_id,
+        id: `${row.cctv_id} - ${info?.lokasi || "Tidak diketahui"}`,
+        total: row.total,
+        jam_unik: row.jam_unik
+      };
+    });
+
+    const jamArusMapped = snapshot.jamArus.map((row: any) => {
+      const info = cctvMap.get(row.cctv_id);
+      return {
+        cctv_id: row.cctv_id,
+        id: `${row.cctv_id} - ${info?.lokasi || "Tidak diketahui"}`,
+        hour: row.hour,
+        total: row.total
+      };
+    });
+
+    return res.json({
+      success: true,
+      total_kendaraan: snapshot.summary?.total_kendaraan ?? 0,
+      perLokasi: perLokasiMapped,
+      jamArus: jamArusMapped
+    });
+
+  } catch(e: any) {
+    return res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 export default router;

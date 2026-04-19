@@ -20,6 +20,7 @@ DB_PATH = "db/traffic.db"
 
 WIDTH = 640
 HEIGHT = 360
+# 1. CONF_TH = 0.55  → batas minimum keyakinan model, objek di bawah 55% diabaikan
 CONF_TH = 0.55
 FRAME_SKIP = 8
 COUNT_INTERVAL = 7
@@ -91,6 +92,7 @@ def draw_modern_box(frame, x1, y1, x2, y2, label, conf):
     font = cv2.FONT_HERSHEY_SIMPLEX
     padding = 4
 
+    # gambar bounding box (kotak persegi) di sekitar objek yang terdeteksi
     cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
 
     text = f"{label} {conf:.2f}"
@@ -284,6 +286,7 @@ def run_cctv(cctv_id, hls_url):
                     frame_id += 1
 
                     if frame_id % FRAME_SKIP == 0:
+                        # 2. conf=CONF_TH  → terapkan filter keyakinan saat prediksi YOLO dijalankan
                         results = model.predict(
                             frame,
                             imgsz=416,
@@ -301,6 +304,7 @@ def run_cctv(cctv_id, hls_url):
                             if label not in VEHICLE_CLASSES:
                                 continue
 
+                            # 3. box.xyxy[0] = koordinat kotak, box.conf[0] = nilai keyakinan hasil deteksi
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             conf = float(box.conf[0])
 
