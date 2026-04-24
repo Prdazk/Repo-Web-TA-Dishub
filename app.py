@@ -8,7 +8,7 @@ import time
 import traceback
 import logging
 from datetime import datetime
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Manager
 from ultralytics import YOLO
 import threading
 import sqlite3
@@ -20,13 +20,19 @@ DB_PATH = "db/traffic.db"
 
 WIDTH = 640
 HEIGHT = 360
-# 1. CONF_TH = 0.55  → batas minimum keyakinan model, objek di bawah 55% diabaikan
-CONF_TH = 0.55
-FRAME_SKIP = 8
-COUNT_INTERVAL = 7
+# 1. CONF_TH = 0.35  → batas minimum keyakinan model, objek di bawah 35% diabaikan
+CONF_TH = 0.45
+FRAME_SKIP = 3
+COUNT_INTERVAL = 10
+
+# Berapa frame sebuah ID boleh "hilang" sebelum dianggap keluar
+ID_EXPIRE_FRAMES = 15
 MAX_PROC = 2
 
 VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
+
+# Memori tracking ID per kamera — 1 kendaraan dihitung 1 kali
+tracked_ids_per_cctv = {}
 
 # PENTING: kamu mau format ini selalu -> cctv_1, cctv_2, dst
 USE_PREFIX_CCTV = True
@@ -221,7 +227,7 @@ def update_traffic_db(cctv_id, counts):
 
 
 # ========= CCTV PROCESS =========
-def run_cctv(cctv_id, hls_url):
+def run_cctv(cctv_id, hls_url, shared_counts):
     cctv_id = normalize_cctv_id(cctv_id)
 
     try:
@@ -267,6 +273,12 @@ def run_cctv(cctv_id, hls_url):
             out_hls
         ]
 
+        # total_counts & fallback_count di luar loop reconnect
+        # supaya tidak reset saat stream putus lalu konek ulang
+        total_counts    = {k: 0 for k in VEHICLE_CLASSES}
+        fallback_count  = 0
+        counted_ids     = set()
+
         while True:
             try:
                 log(cctv_id, "info", "CONNECTING to stream...")
@@ -277,6 +289,14 @@ def run_cctv(cctv_id, hls_url):
                 frame_id = 0
                 last_boxes = []
 
+                # id_tracker    : { track_id: {"label": str, "last_frame": int} }
+                # counted_ids   : di luar loop → tidak reset saat reconnect
+                # interval_counts: akumulasi per COUNT_INTERVAL → disimpan ke DB lalu reset
+                # total_counts  : di luar loop → akumulasi total tidak hilang saat reconnect
+                # fallback_count: di luar loop → terus akumulasi
+                id_tracker      = {}
+                interval_counts = {k: 0 for k in VEHICLE_CLASSES}
+
                 while True:
                     raw = pipe_in.stdout.read(frame_size)
                     if not raw or len(raw) != frame_size:
@@ -286,33 +306,97 @@ def run_cctv(cctv_id, hls_url):
                     frame_id += 1
 
                     if frame_id % FRAME_SKIP == 0:
-                        # 2. conf=CONF_TH  → terapkan filter keyakinan saat prediksi YOLO dijalankan
-                        results = model.predict(
+                        results = model.track(
                             frame,
-                            imgsz=416,
+                            imgsz=640,
                             conf=CONF_TH,
                             device="cpu",
+                            persist=True,
                             verbose=False
                         )[0]
 
                         last_boxes.clear()
-                        counts = {k: 0 for k in VEHICLE_CLASSES}
+                        current_frame_ids = set()
 
                         for box in results.boxes:
                             cls_id = int(box.cls[0])
-                            label = model.names[cls_id]
+                            label  = model.names[cls_id]
                             if label not in VEHICLE_CLASSES:
                                 continue
 
-                            # 3. box.xyxy[0] = koordinat kotak, box.conf[0] = nilai keyakinan hasil deteksi
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             conf = float(box.conf[0])
-
                             last_boxes.append((x1, y1, x2, y2, label, conf))
-                            counts[label] += 1
 
+                            if box.id is not None:
+                                track_id = int(box.id[0])
+                                current_frame_ids.add(track_id)
+
+                                # Update kapan terakhir ID ini muncul di frame
+                                id_tracker[track_id] = {
+                                    "label": label,
+                                    "last_frame": frame_id
+                                }
+
+                                # Hitung HANYA kalau belum pernah dihitung sama sekali
+                                # counted_ids tidak pernah dihapus → anti double count
+                                if track_id not in counted_ids:
+                                    counted_ids.add(track_id)
+                                    interval_counts[label] += 1
+                                    total_counts[label]    += 1
+                                    log(cctv_id, "info",
+                                        f"NEW vehicle id={track_id} label={label} "
+                                        f"conf={conf:.2f} total={sum(total_counts.values())}")
+                            else:
+                                # Fallback: YOLO detect tapi tidak dapat track_id
+                                # Hitung ke interval & total, tapi catat sebagai fallback
+                                interval_counts[label] += 1
+                                total_counts[label]    += 1
+                                fallback_count         += 1
+                                log(cctv_id, "warning",
+                                    f"FALLBACK (no track_id) label={label} conf={conf:.2f} "
+                                    f"total_fallback={fallback_count}")
+
+                        # Hapus dari id_tracker kalau sudah lama tidak muncul
+                        # TIDAK dihapus dari counted_ids → ini yang fix double count
+                        expired_ids = [
+                            tid for tid, info in id_tracker.items()
+                            if (frame_id - info["last_frame"]) > ID_EXPIRE_FRAMES
+                        ]
+                        for tid in expired_ids:
+                            del id_tracker[tid]
+                            # counted_ids.discard(tid) ← DIHAPUS, ini sumber double count
+
+                        # Anti memory leak: kalau counted_ids terlalu besar
+                        # hanya simpan yang masih aktif di id_tracker
+                        if len(counted_ids) > 10000:
+                            active_ids  = set(id_tracker.keys())
+                            counted_ids = counted_ids & active_ids
+                            log(cctv_id, "warning",
+                                f"counted_ids trimmed → {len(counted_ids)} active IDs")
+
+                        # Tulis ke shared dict yang dibaca Flask → Node.js → Frontend
+                        # Pakai total_counts (akumulasi) bukan interval_counts
+                        # supaya angka di frontend tidak turun/reset tiap 10 detik
+                        shared_counts[cctv_id] = {
+                            "car":           total_counts["car"],
+                            "motorcycle":    total_counts["motorcycle"],
+                            "bus":           total_counts["bus"],
+                            "truck":         total_counts["truck"],
+                            "unique_ids":    len(counted_ids),
+                            "fallback_count": fallback_count,
+                            "timestamp":     time.time()
+                        }
+
+                        # Simpan ke DB tiap COUNT_INTERVAL detik
+                        # Hanya interval_counts yang di-reset, bukan total_counts
+                        # counted_ids juga TIDAK di-reset → anti double count terjaga
                         if time.time() - last_count_time >= COUNT_INTERVAL:
-                            update_traffic_db(cctv_id, counts)
+                            update_traffic_db(cctv_id, interval_counts)
+                            log(cctv_id, "info",
+                                f"DB saved interval={interval_counts} "
+                                f"total={total_counts} fallback={fallback_count}")
+                            interval_counts = {k: 0 for k in VEHICLE_CLASSES}
                             last_count_time = time.time()
 
                     for x1, y1, x2, y2, label, conf in last_boxes:
@@ -324,6 +408,16 @@ def run_cctv(cctv_id, hls_url):
                 log(cctv_id, "error", f"STREAM ERROR: {str(e)}")
                 log(cctv_id, "error", traceback.format_exc())
                 log(cctv_id, "warning", "RECONNECTING in 3 seconds...")
+
+                # Matikan proses FFmpeg lama agar tidak menumpuk di background
+                try:
+                    pipe_in.kill()
+                    pipe_out.kill()
+                    pipe_in.wait()   # tunggu sampai benar-benar mati
+                    pipe_out.wait()  # sebelum spawn FFmpeg baru
+                except Exception:
+                    pass
+
                 time.sleep(3)
 
     except Exception as e:
@@ -332,8 +426,10 @@ def run_cctv(cctv_id, hls_url):
 
 
 # ========= MAIN =========
-def run_flask():
+def run_flask(shared_counts):
     logging.info("Starting Flask API on port 6327")
+    from src.routes.apiSignal import set_shared_counts
+    set_shared_counts(shared_counts)
     app.run(host="0.0.0.0", port=6327, debug=False, use_reloader=False)
 
 
@@ -346,13 +442,16 @@ if __name__ == "__main__":
     create_db()
     migrate_old_ids_to_prefixed()
 
-    threading.Thread(target=run_flask, daemon=True).start()
+    # Shared dict antar process — ini yang bikin data bisa dibaca Flask
+    manager = Manager()
+    shared_counts = manager.dict()
+
+    threading.Thread(target=run_flask, args=(shared_counts,), daemon=True).start()
 
     processes = []
     for cam in cctvs[:MAX_PROC]:
-        # pastikan yang masuk proses sudah cctv_<id>
         cam_id = normalize_cctv_id(cam["id"])
-        p = Process(target=run_cctv, args=(cam_id, cam["hls"]))
+        p = Process(target=run_cctv, args=(cam_id, cam["hls"], shared_counts))
         p.start()
         processes.append(p)
 

@@ -45,6 +45,25 @@ function getDb() {
   return sqlite;
 }
 
+
+// ============================
+// COUNTS PROXY (untuk monitor real-time)
+// Forward dari Node.js ke Python Flask port 6327
+// ============================
+router.get("/counts", async (req: any, res: any) => {
+  try {
+    const response = await fetch("http://localhost:6327/counts");
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: `Detektor tidak merespons: ${error.message}`
+    });
+  }
+});
+
 // ============================
 // SERVER HEALTH
 // ============================
@@ -89,6 +108,13 @@ function safeParseInt(v: any, fallback: number) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+// Pastikan selalu "cctv_X" — tidak double prefix
+// Handles: "1" → "cctv_1", "cctv_1" → "cctv_1"
+function normalizeId(raw: string): string {
+  const trimmed = raw.trim();
+  return trimmed.startsWith("cctv_") ? trimmed : "cctv_" + trimmed;
+}
+
 // ============================
 // ROUTE /db/list
 // ============================
@@ -102,10 +128,9 @@ router.get("/db/list", (req: any, res: any) => {
     const limitNumber = safeParseInt(limit, 10);
     const offset = (pageNumber - 1) * limitNumber;
 
-    // Frontend kamu kirim ids = "1", jadi kita buat "cctv_1"
-    // Support multi ID: "1,2" → ["cctv_1", "cctv_2"]
+    // Normalize ID: "1" → "cctv_1", "cctv_1" → "cctv_1" (tidak double prefix)
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     // ============================
@@ -238,7 +263,7 @@ router.get("/db/summary", (req: any, res: any) => {
     const { ids, startDate, endDate } = req.query;
 
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     const db = getDb();
@@ -279,7 +304,7 @@ router.get("/db/jam-arus", (req: any, res: any) => {
     const { ids, startDate, endDate } = req.query;
 
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     const db = getDb();
@@ -296,7 +321,7 @@ router.get("/db/jam-arus", (req: any, res: any) => {
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
-const { cctvMap } = loadCctvMap();
+    const { cctvMap } = loadCctvMap();
 
     const rows = db.prepare<any[], any>(`
       SELECT
@@ -338,7 +363,7 @@ router.get("/db/riwayat", (req: any, res: any) => {
     const offset = (pageNumber - 1) * limitNumber;
 
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     const db = getDb();
@@ -403,7 +428,7 @@ router.get("/db/per-lokasi", (req: any, res: any) => {
     const { cctvMap } = loadCctvMap();
 
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     const db = getDb();
@@ -456,7 +481,7 @@ router.get("/db/dashboard-snapshot", (req: any, res: any) => {
     const { cctvMap } = loadCctvMap();
 
     const idList = ids
-      ? String(ids).split(",").map(id => "cctv_" + id.trim())
+      ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
     const db = getDb();

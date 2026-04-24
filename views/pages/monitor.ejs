@@ -12,6 +12,103 @@
     rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <link href="/styles/monitor.css" rel="stylesheet" />
+  <style>
+.monitor-wrapper {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  align-items: flex-start;
+}
+
+.app {
+  flex: 1;
+  min-width: 0;
+}
+
+.detection-panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detection-panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f97316;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 8px;
+}
+
+.count-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.count-item .icon-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.count-item .value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.count-item.total {
+  background: #f97316;
+  margin-top: 4px;
+}
+
+.count-item.total .icon-label {
+  color: #fff;
+  font-weight: 700;
+}
+
+.count-item.total .value {
+  color: #fff;
+  font-size: 22px;
+}
+
+.panel-update {
+  font-size: 10px;
+  color: #475569;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.panel-status {
+  font-size: 11px;
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
+  background: #134e4a;
+  color: #34d399;
+}
+
+@media (max-width: 768px) {
+  .monitor-wrapper {
+    flex-direction: column;
+  }
+  .detection-panel {
+    width: 100%;
+  }
+}
+</style>
   <link rel="icon" href="../../logo.png" />
 </head>
 
@@ -43,7 +140,68 @@
     </div>
   </template>
 
+  <div class="monitor-wrapper">
+
   <div class="app"></div>
+
+  <div class="detection-panel">
+    <h3>🎯 Deteksi Real-time</h3>
+
+    <div class="count-item">
+      <div class="icon-label"><span>🏍️</span> Motor</div>
+      <span class="value" id="cnt-motorcycle">-</span>
+    </div>
+
+    <div class="count-item">
+      <div class="icon-label"><span>🚗</span> Mobil</div>
+      <span class="value" id="cnt-car">-</span>
+    </div>
+
+    <div class="count-item">
+      <div class="icon-label"><span>🚌</span> Bus</div>
+      <span class="value" id="cnt-bus">-</span>
+    </div>
+
+    <div class="count-item">
+      <div class="icon-label"><span>🚛</span> Truk</div>
+      <span class="value" id="cnt-truck">-</span>
+    </div>
+
+    <div class="count-item total">
+      <div class="icon-label"><span>📊</span> Total</div>
+      <span class="value" id="cnt-total">-</span>
+    </div>
+
+    <!-- Info akurasi untuk pengujian -->
+    <div style="
+      margin-top: 4px;
+      padding: 10px 12px;
+      background: #0f2744;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:#64748b;">🔖 ID Unik Tercatat</span>
+        <span id="cnt-unique" style="font-size:13px;font-weight:700;color:#38bdf8;">-</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:#64748b;">⚠️ Tanpa Track ID</span>
+        <span id="cnt-fallback" style="font-size:13px;font-weight:700;color:#f59e0b;">-</span>
+      </div>
+      <div style="height:1px;background:#1e293b;margin:2px 0;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:#64748b;">🕐 Sejak</span>
+        <span id="cnt-since" style="font-size:11px;color:#94a3b8;">-</span>
+      </div>
+    </div>
+
+    <div class="panel-status" id="panel-status">⏳ Menghubungkan...</div>
+    <div class="panel-update" id="panel-update"></div>
+  </div>
+
+</div>
 
   <div class="info">
     <div class="info-item">
@@ -395,6 +553,72 @@
         }
       };
     }
+
+   // ======= POLLING COUNT REAL-TIME =======
+    // Ambil cctv_id dari URL, misal /monitor/cctv_1 → "cctv_1"
+    const cctvIdRaw = "<%= stream.id %>";
+    const cctvId = cctvIdRaw.startsWith("cctv_")
+      ? cctvIdRaw
+      : "cctv_" + cctvIdRaw;
+
+    // Catat waktu mulai monitoring — ditampilkan di panel akurasi
+    const monitoringSince = new Date().toLocaleTimeString("id-ID");
+    document.getElementById("cnt-since").innerText = monitoringSince;
+
+    async function fetchDetectionCounts() {
+      try {
+        const r = await fetch("/api/counts");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+
+        const c = data[cctvId];
+        if (!c) {
+          document.getElementById("panel-status").innerText = "⚠️ Belum ada data";
+          return;
+        }
+
+        // Tampilkan count per jenis kendaraan (akumulasi total dari backend)
+        document.getElementById("cnt-motorcycle").innerText = c.motorcycle ?? 0;
+        document.getElementById("cnt-car").innerText        = c.car       ?? 0;
+        document.getElementById("cnt-bus").innerText        = c.bus       ?? 0;
+        document.getElementById("cnt-truck").innerText      = c.truck     ?? 0;
+
+        // Total semua jenis
+        const total = (c.motorcycle ?? 0) + (c.car   ?? 0)
+                    + (c.bus        ?? 0) + (c.truck  ?? 0);
+        document.getElementById("cnt-total").innerText = total;
+
+        // Info akurasi — unique_ids & fallback_count dari app.py
+        // unique_ids   = jumlah ID unik yang sudah dihitung (anti double count)
+        // fallback_count = kendaraan terdeteksi tapi YOLO tidak beri track_id
+        if (c.unique_ids !== undefined) {
+          document.getElementById("cnt-unique").innerText = c.unique_ids;
+        }
+        if (c.fallback_count !== undefined) {
+          document.getElementById("cnt-fallback").innerText = c.fallback_count;
+        }
+
+        // Status Live
+        const statusEl = document.getElementById("panel-status");
+        statusEl.innerText    = "🟢 Live";
+        statusEl.style.background = "#134e4a";
+        statusEl.style.color      = "#34d399";
+
+        document.getElementById("panel-update").innerText =
+          "Update: " + new Date().toLocaleTimeString("id-ID");
+
+      } catch (e) {
+        const statusEl = document.getElementById("panel-status");
+        statusEl.innerText        = "🔴 Detektor offline";
+        statusEl.style.background = "#450a0a";
+        statusEl.style.color      = "#f87171";
+      }
+    }
+
+    // Polling tiap 3 detik
+    fetchDetectionCounts();
+    setInterval(fetchDetectionCounts, 3000);
+    
   </script>
 </body>
 
