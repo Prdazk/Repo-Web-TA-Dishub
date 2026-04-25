@@ -178,29 +178,18 @@
       <span class="value" id="cnt-total">-</span>
     </div>
 
-    <!-- Info akurasi untuk pengujian -->
-    <div style="
+    <!-- Info arus lalu lintas -->
+    <div id="traffic-flow-box" style="
       margin-top: 4px;
       padding: 10px 12px;
-      background: #0f2744;
+      background: #1e293b;
       border-radius: 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     ">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#64748b;">🔖 ID Unik Tercatat</span>
-        <span id="cnt-unique" style="font-size:13px;font-weight:700;color:#38bdf8;">-</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#64748b;">⚠️ Tanpa Track ID</span>
-        <span id="cnt-fallback" style="font-size:13px;font-weight:700;color:#f59e0b;">-</span>
-      </div>
-      <div style="height:1px;background:#1e293b;margin:2px 0;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#64748b;">🕐 Sejak</span>
-        <span id="cnt-since" style="font-size:11px;color:#94a3b8;">-</span>
-      </div>
+      <span style="font-size:11px;color:#64748b;">🚦 Arus Lalu Lintas</span>
+      <span id="cnt-flow" style="font-size:15px;font-weight:800;color:#f1f5f9;">-</span>
     </div>
 
     <div class="panel-status" id="panel-status">⏳ Menghubungkan...</div>
@@ -222,7 +211,7 @@
       <div class="info-title">
         <i class="fa fa-sort-amount-desc" aria-hidden="true"></i> | Stream
       </div>
-      <div class="info-value" id="message-health">HLS m3u8</div>
+      <div class="info-value" id="message-health"></div>
     </div>
   </div>
 
@@ -242,7 +231,7 @@
       const template = document.getElementById("video-template");
 
       const videoConfigs = [
-        { label: "YOLO", url: "<%= hls_o %>" },
+        { label: "", url: "<%= hls_o %>" },
         ...(SHOW_RAW_STREAM || raw
           ? [{ label: "Raw Stream", url: "<%= hls %>" }]
           : []),
@@ -567,10 +556,6 @@
       ? cctvIdRaw
       : "cctv_" + cctvIdRaw;
 
-    // Catat waktu mulai monitoring — ditampilkan di panel akurasi
-    const monitoringSince = new Date().toLocaleTimeString("id-ID");
-    document.getElementById("cnt-since").innerText = monitoringSince;
-
     async function fetchDetectionCounts() {
       try {
         const r = await fetch("/api/counts");
@@ -594,14 +579,21 @@
                     + (c.bus        ?? 0) + (c.truck  ?? 0);
         document.getElementById("cnt-total").innerText = total;
 
-        // Info akurasi — unique_ids & fallback_count dari app.py
-        // unique_ids   = jumlah ID unik yang sudah dihitung (anti double count)
-        // fallback_count = kendaraan terdeteksi tapi YOLO tidak beri track_id
-        if (c.unique_ids !== undefined) {
-          document.getElementById("cnt-unique").innerText = c.unique_ids;
-        }
-        if (c.fallback_count !== undefined) {
-          document.getElementById("cnt-fallback").innerText = c.fallback_count;
+        // Arus lalu lintas berdasarkan total kendaraan
+        const flowEl  = document.getElementById("cnt-flow");
+        const flowBox = document.getElementById("traffic-flow-box");
+        if (total < 10) {
+          flowEl.innerText       = "🟢 Lancar";
+          flowBox.style.background = "#14532d";
+          flowEl.style.color       = "#4ade80";
+        } else if (total <= 30) {
+          flowEl.innerText       = "🟡 Sedang";
+          flowBox.style.background = "#713f12";
+          flowEl.style.color       = "#fbbf24";
+        } else {
+          flowEl.innerText       = "🔴 Padat";
+          flowBox.style.background = "#450a0a";
+          flowEl.style.color       = "#f87171";
         }
 
         // Status Live

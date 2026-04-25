@@ -362,13 +362,9 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                             del id_tracker[tid]
                             # counted_ids.discard(tid) ← DIHAPUS, ini sumber double count
 
-                        # Anti memory leak: kalau counted_ids terlalu besar
-                        # hanya simpan yang masih aktif di id_tracker
                         if len(counted_ids) > 10000:
-                            active_ids  = set(id_tracker.keys())
-                            counted_ids = counted_ids & active_ids
                             log(cctv_id, "warning",
-                                f"counted_ids trimmed → {len(counted_ids)} active IDs")
+                             f"counted_ids besar ({len(counted_ids)}) tapi TIDAK ditrim → anti double count terjaga")
 
                         # Tulis ke shared dict yang dibaca Flask → Node.js → Frontend
                         # Pakai total_counts (akumulasi) bukan interval_counts
