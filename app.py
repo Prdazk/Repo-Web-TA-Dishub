@@ -22,7 +22,7 @@ WIDTH = 640
 HEIGHT = 360
 # 1. CONF_TH = 0.35  → batas minimum keyakinan model, objek di bawah 35% diabaikan
 CONF_TH = 0.45
-FRAME_SKIP = 3
+FRAME_SKIP = 5
 COUNT_INTERVAL = 10
 
 # Berapa frame sebuah ID boleh "hilang" sebelum dianggap keluar
@@ -289,11 +289,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 frame_id = 0
                 last_boxes = []
 
-                # id_tracker    : { track_id: {"label": str, "last_frame": int} }
-                # counted_ids   : di luar loop → tidak reset saat reconnect
-                # interval_counts: akumulasi per COUNT_INTERVAL → disimpan ke DB lalu reset
-                # total_counts  : di luar loop → akumulasi total tidak hilang saat reconnect
-                # fallback_count: di luar loop → terus akumulasi
                 id_tracker      = {}
                 interval_counts = {k: 0 for k in VEHICLE_CLASSES}
 
