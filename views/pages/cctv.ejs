@@ -331,7 +331,12 @@
 
         function setFilterShortcut(type) {
             const today = new Date();
-            const fmt = d => d.toISOString().split('T')[0];
+            const fmt = d => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
             if (type === 'today') {
                 document.getElementById("startDate").value = fmt(today);
                 document.getElementById("endDate").value = fmt(today);
@@ -344,8 +349,8 @@
                 document.getElementById("startDate").value = fmt(w);
                 document.getElementById("endDate").value = fmt(today);
             } else if (type === 'month') {
-                const m = new Date(today.getFullYear(), today.getMonth(), 1);
-                document.getElementById("startDate").value = fmt(m);
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById("startDate").value = fmt(firstDay);
                 document.getElementById("endDate").value = fmt(today);
             }
         }
@@ -517,7 +522,8 @@
 
                 renderPagination(totalPage);
 
-                const today = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
                 // ← TAMBAHKAN INI
                 const labelHariIni = document.getElementById("labelHariIni");
@@ -555,7 +561,7 @@
                 if (totalKendaraanHariIni === 0) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
-                    const yDate = yesterday.toISOString().split('T')[0];
+                    const yDate = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
                     const yParams = new URLSearchParams();
                     yParams.set("ids", cctv);
                     yParams.set("startDate", yDate);
@@ -782,8 +788,9 @@
         }
 
         function exportPDF() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("pdfTanggal").value = today;
+        const _n = new Date();
+        const today = `${_n.getFullYear()}-${String(_n.getMonth()+1).padStart(2,'0')}-${String(_n.getDate()).padStart(2,'0')}`;
+        document.getElementById("pdfTanggal").value = today;
             document.getElementById("modalPDF").style.display = "flex";
         }
 
@@ -900,8 +907,9 @@
         }
 
         function exportExcel() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("excelTanggal").value = today;
+        const _n = new Date();
+        const today = `${_n.getFullYear()}-${String(_n.getMonth()+1).padStart(2,'0')}-${String(_n.getDate()).padStart(2,'0')}`;
+        document.getElementById("excelTanggal").value = today;
             document.getElementById("modalExcel").style.display = "flex";
         }
 
@@ -971,7 +979,12 @@
 
         function setRiwayatShortcut(type) {
             const today = new Date();
-            const fmt = d => d.toISOString().split('T')[0];
+            const fmt = d => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
             if (type === 'today') {
                 document.getElementById("riwayatStartDate").value = fmt(today);
                 document.getElementById("riwayatEndDate").value = fmt(today);
@@ -984,8 +997,8 @@
                 document.getElementById("riwayatStartDate").value = fmt(w);
                 document.getElementById("riwayatEndDate").value = fmt(today);
             } else if (type === 'month') {
-                const m = new Date(today.getFullYear(), today.getMonth(), 1);
-                document.getElementById("riwayatStartDate").value = fmt(m);
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById("riwayatStartDate").value = fmt(firstDay);
                 document.getElementById("riwayatEndDate").value = fmt(today);
             }
         }
