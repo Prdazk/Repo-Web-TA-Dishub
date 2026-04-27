@@ -135,7 +135,7 @@
                         <h3 style="margin:0 0 8px;color:#166534;font-size:18px;">📊 Export Excel</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
-                        <input type="date" id="excelTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;">
+                        <input type="date" id="excelTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;-webkit-appearance:none;appearance:none;color:#374151;">
                         <div style="display:flex;gap:10px;">
                             <button onclick="closeExcelModal()" style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
                             <button onclick="doExportExcel()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Export</button>
@@ -149,11 +149,21 @@
                         <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;">📄 Export PDF</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
-                        <input type="date" id="pdfTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;">
+                        <input type="date" id="pdfTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;-webkit-appearance:none;appearance:none;color:#374151;">
                         <div style="display:flex;gap:10px;">
                             <button onclick="closePDFModal()" style="flex:1;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:14px;cursor:pointer;">Batal</button>
                             <button onclick="doExportPDF()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Export</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Modal Tidak Ada Data -->
+                <div id="modalTidakAdaData" onclick="if(event.target===this)closeModalTidakAdaData()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center;">
+                    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:36px 32px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center;">
+                        <div style="font-size:52px;margin-bottom:12px;">📭</div>
+                        <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;font-weight:700;">Tidak Ada Data</h3>
+                        <p id="modalTidakAdaDataPesan" style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;"></p>
+                        <button onclick="closeModalTidakAdaData()" style="padding:11px 32px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">OK, Mengerti</button>
                     </div>
                 </div>
 
@@ -382,20 +392,48 @@
             closeFilterModal();
             currentPage = 1;
             localStorage.setItem("currentPage", "1");
-            loadKendaraan();
+            loadKendaraanWithCheck();
         }
 
         function resetFilter() {
-            document.getElementById("startDate").value = "";
-            document.getElementById("endDate").value = "";
-            localStorage.removeItem("filterStartDate");
-            localStorage.removeItem("filterEndDate");
-            document.getElementById("labelFilterAktif").innerText = "";
-            document.getElementById("btnResetFilter").style.display = "none";
-            currentPage = 1;
-            localStorage.setItem("currentPage", "1");
-            loadKendaraan();
-        }
+                document.getElementById("startDate").value = "";
+                document.getElementById("endDate").value = "";
+                localStorage.removeItem("filterStartDate");
+                localStorage.removeItem("filterEndDate");
+                document.getElementById("labelFilterAktif").innerText = "";
+                document.getElementById("btnResetFilter").style.display = "none";
+                currentPage = 1;
+                localStorage.setItem("currentPage", "1");
+                loadKendaraan();
+            }
+
+            async function loadKendaraanWithCheck() {
+                const startDate = localStorage.getItem("filterStartDate") || "";
+                const endDate = localStorage.getItem("filterEndDate") || "";
+
+                if (startDate || endDate) {
+                    const params = new URLSearchParams();
+                    params.set("ids", cctv);
+                    params.set("page", "1");
+                    params.set("limit", "1");
+                    if (startDate) params.set("startDate", startDate);
+                    if (endDate) params.set("endDate", endDate);
+
+                    const r = await fetch(`/api/db/list?${params.toString()}`);
+                    const j = await r.json();
+
+                    if (!j.data || j.data.length === 0) {
+                        const label = startDate === endDate && startDate
+                            ? startDate
+                            : startDate || endDate;
+                        showModalTidakAdaData(label);
+                        resetFilter();
+                        return;
+                    }
+                }
+
+                loadKendaraan();
+            }
 
         const tableK = document.getElementById('tableKendaraan');
 
@@ -666,45 +704,141 @@
             }
         }
 
-        // ====== CHART — per CCTV per jam dari jamArusData ======
-        const allJam = [...new Set(jamArusData.map(r => parseInt(r.hour, 10)))].sort((a, b) => a - b);
-        const lokasiIdsChart = [...new Set(jamArusData.map(r => r.id))];
-        const colorsChart = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-        const ctx = document.getElementById('arusChart').getContext('2d');
-        if (arusChartInstance) arusChartInstance.destroy();
+        } // tutup function renderRiwayat
 
-        const datasetsChart = lokasiIdsChart.map((id, i) => {
-            const dataPerJam = allJam.map(jam => {
-                const row = jamArusData.find(r => r.id === id && parseInt(r.hour, 10) === jam);
-                return row ? row.total : 0;
-            });
-            return {
-                label: id,
-                data: dataPerJam,
-                borderColor: colorsChart[i % colorsChart.length],
-                backgroundColor: colorsChart[i % colorsChart.length] + '26',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointBackgroundColor: colorsChart[i % colorsChart.length]
-            };
-        });
+        // ====== CHART — ambil data dari API riwayat per jam ======
+        async function updateArusChart() {
+            const startDate = document.getElementById("riwayatStartDate").value;
+            const endDate = document.getElementById("riwayatEndDate").value;
 
-        arusChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: allJam.map(j => j + ":00"),
-                datasets: datasetsChart
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: true } },
-                scales: { y: { beginAtZero: true } }
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("startDate", startDate || today);
+            params.set("endDate", endDate || today);
+
+            let chartData = [];
+            try {
+                const res = await fetch(`/api/db/dashboard-snapshot?${params.toString()}`);
+                const snap = await res.json();
+                chartData = snap.jamArus || [];
+            } catch(e) {
+                console.error("Gagal fetch chart data:", e);
             }
-        });
 
-        
-    } // tutup function renderRiwayat
+            const allJam = [...new Set(chartData.map(r => parseInt(r.hour, 10)))].sort((a, b) => a - b);
+            const lokasiIdsChart = [...new Set(chartData.map(r => r.id))];
+            const colorsChart = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+            const ctx = document.getElementById('arusChart').getContext('2d');
+            if (arusChartInstance) arusChartInstance.destroy();
+
+            if (chartData.length === 0) {
+                arusChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: [], datasets: [] },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Tidak ada data untuk rentang tanggal ini', color: '#9ca3af', font: { size: 14 } }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const datasetsChart = lokasiIdsChart.map((id, i) => {
+                const dataPerJam = allJam.map(jam => {
+                    const row = chartData.find(r => r.id === id && parseInt(r.hour, 10) === jam);
+                    return row ? row.total : 0;
+                });
+            return {
+            label: id,
+            data: dataPerJam,
+            borderColor: colorsChart[i % colorsChart.length],
+            backgroundColor: colorsChart[i % colorsChart.length] + '18',
+            borderWidth: 2.5,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 8,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: colorsChart[i % colorsChart.length],
+            pointBorderWidth: 2.5,
+            pointHoverBackgroundColor: colorsChart[i % colorsChart.length],
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+        };
+            });
+
+            arusChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allJam.map(j => j + ":00"),
+                    datasets: datasetsChart
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: { mode: 'index', intersect: false, axis: 'x' },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 20,
+                                font: { size: 12, family: 'Inter, sans-serif' },
+                                color: '#374151'
+                            }
+                        },
+                tooltip: {
+                    backgroundColor: '#1e3a5f',
+                    titleColor: '#10b981',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyColor: '#e2e8f0',
+                    bodyFont: { size: 12 },
+                    padding: 14,
+                    cornerRadius: 12,
+                    borderColor: 'rgba(16,185,129,0.3)',
+                    borderWidth: 1,
+                    usePointStyle: true,
+                    boxWidth: 8,
+                    boxHeight: 8,
+                    callbacks: {
+                        title: items => `🕐 Jam ${items[0].label}`,
+                        label: ctx => {
+                            const nama = ctx.dataset.label.split(' - ').slice(1).join(' - ') || ctx.dataset.label;
+                            return `  ${nama}: ${ctx.parsed.y.toLocaleString('id-ID')} kendaraan`;
+                        }
+                    }
+                },
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#f1f5f9', lineWidth: 1 },
+                            ticks: { color: '#6b7280', font: { size: 12 } },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9', lineWidth: 1 },
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 12 },
+                                callback: val => val.toLocaleString('id-ID')
+                            },
+                            border: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+        updateArusChart();
+
 
        function renderPagination(totalPage) {
             pagination.innerHTML = '';
@@ -825,9 +959,9 @@
         const j = await r.json();
 
         if (!j.data || j.data.length === 0) {
-            win.close();
-            alert(`Tidak ada data untuk tanggal ${tglInput}`);
-            return;
+         win.close();
+        showModalTidakAdaData(tglInput);
+        return;
         }
 
         const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
@@ -937,8 +1071,8 @@
             const j = await r.json();
 
             if (!j.data || j.data.length === 0) {
-                alert(`Tidak ada data untuk tanggal ${tglInput}`);
-                return;
+            showModalTidakAdaData(tglInput);
+            return;
             }
 
             let totalKeseluruhan = 0;
@@ -1027,6 +1161,7 @@
             closeRiwayatFilterModal();
             riwayatPage = 1;
             loadRiwayat();
+            updateArusChart();  
         }
 
         function resetRiwayatFilter() {
@@ -1036,6 +1171,7 @@
             document.getElementById("btnResetRiwayat").style.display = "none";
             riwayatPage = 1;
             loadRiwayat();
+            updateArusChart();
         }
 
         function buildRiwayatUrl() {
@@ -1168,6 +1304,18 @@
             document.getElementById("modalTotalKendaraan").style.display = "flex";
         }
 
+        function showModalTidakAdaData(tgl) {
+            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                        "Juli","Agustus","September","Oktober","November","Desember"];
+            const tglObj = new Date(tgl + 'T00:00:00');
+            const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+            document.getElementById("modalTidakAdaDataPesan").innerText = `Tidak ada data kendaraan untuk tanggal ${tglFormatted}.`;
+            document.getElementById("modalTidakAdaData").style.display = "flex";
+        }
+        function closeModalTidakAdaData() {
+            document.getElementById("modalTidakAdaData").style.display = "none";
+        }
+
         function bukaModalLokasi() {
             const isi = document.getElementById("modalLokasiTerpantauIsi");
             const streams = "<%= streams.map(s => s.lokasi).join('||') %>".split('||');
@@ -1199,6 +1347,7 @@
 
         loadKendaraan();
         loadRiwayat();
+        updateArusChart();
 
             if (window._autoRefreshTimer) clearInterval(window._autoRefreshTimer);
             window._autoRefreshTimer = setInterval(() => {
