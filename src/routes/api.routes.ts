@@ -19,6 +19,8 @@ const CCTV_CONFIG = path.join(process.cwd(), "config", "cctv.json");
 
 let sqlite: Database.Database | null = null;
 let _cctvMapCache: Map<string, CctvInfo> | null = null; // ← tambah ini
+let _cctvMapCacheTime: number = 0;
+const CCTV_CACHE_TTL = 60 * 1000; // refresh cache tiap 60 detik
 
 function getDb() {
   if (!sqlite) {
@@ -46,17 +48,36 @@ function getDb() {
 }
 
 
-// ============================
-// COUNTS PROXY (untuk monitor real-time)
-// Forward dari Node.js ke Python Flask port 6327
-// ============================
 router.get("/counts", async (req: any, res: any) => {
   try {
-    const response = await fetch("http://localhost:6327/counts");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // timeout 3 detik
+
+    const response = await fetch("http://localhost:6327/counts", {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     res.json(data);
   } catch (error: any) {
+    const isOffline =
+      error.code === "ECONNREFUSED" ||
+      error.name === "AbortError" ||
+      error.cause?.code === "ECONNREFUSED";
+
+    if (isOffline) {
+      // Kembalikan data kosong yang valid, bukan error 500
+      // supaya frontend tidak crash saat Python belum siap
+      return res.json({
+        success: true,
+        offline: true,
+        message: "Detektor belum aktif",
+        data: {}
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: `Detektor tidak merespons: ${error.message}`
@@ -64,22 +85,30 @@ router.get("/counts", async (req: any, res: any) => {
   }
 });
 
-// ============================
-// SERVER HEALTH
-// ============================
 router.get("/server-health", async (req, res) => {
   try {
-    const response = await fetch("http://localhost:6327/");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch("http://localhost:6327/", {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     res.json({ status: "ok", data });
   } catch (error: any) {
-    console.error("Fetch error:", error);
-    res.status(500).json({
-      status: "error",
-      error: `Detektor tidak merespons, server sedang offline. Pesan: ${error.message}`,
+    const isOffline =
+      error.code === "ECONNREFUSED" ||
+      error.name === "AbortError" ||
+      error.cause?.code === "ECONNREFUSED";
+
+    res.status(isOffline ? 503 : 500).json({
+      status: "offline",
+      error: isOffline
+        ? "Detektor belum aktif (Python belum jalan)"
+        : `Detektor tidak merespons: ${error.message}`,
     });
   }
 });
@@ -88,7 +117,11 @@ router.get("/server-health", async (req, res) => {
 // HELPERS
 // ============================
 function loadCctvMap() {
-  if (_cctvMapCache) return { cctvMap: _cctvMapCache };
+ const now = Date.now();
+  if (_cctvMapCache && (now - _cctvMapCacheTime) < CCTV_CACHE_TTL) {
+    return { cctvMap: _cctvMapCache };
+  }
+  _cctvMapCacheTime = now;
 
   const cctvConfig = JSON.parse(fs.readFileSync(CCTV_CONFIG, "utf-8"));
   const streams = cctvConfig.streams || [];

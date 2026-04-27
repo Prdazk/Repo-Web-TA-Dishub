@@ -31,8 +31,7 @@ MAX_PROC = 2
 
 VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
 
-# Memori tracking ID per kamera — 1 kendaraan dihitung 1 kali
-tracked_ids_per_cctv = {}
+# (tracked_ids_per_cctv dihapus — tidak dipakai, counting dilakukan lewat counted_ids di run_cctv)
 
 # PENTING: kamu mau format ini selalu -> cctv_1, cctv_2, dst
 USE_PREFIX_CCTV = True
@@ -273,11 +272,12 @@ def run_cctv(cctv_id, hls_url, shared_counts):
             out_hls
         ]
 
-        # total_counts & fallback_count di luar loop reconnect
-        # supaya tidak reset saat stream putus lalu konek ulang
-        total_counts    = {k: 0 for k in VEHICLE_CLASSES}
-        fallback_count  = 0
-        counted_ids     = set()
+        total_counts        = {k: 0 for k in VEHICLE_CLASSES}
+        fallback_count      = 0
+        counted_ids         = set()
+        fallback_centroids  = []   # list of (cx, cy, label, frame_id)
+        FALLBACK_DIST_TH    = 50   # pixel — jarak minimum antar centroid beda kendaraan
+        FALLBACK_EXPIRE     = 15   # frame — centroid lama dihapus setelah N frame
 
         while True:
             try:
@@ -289,8 +289,9 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 frame_id = 0
                 last_boxes = []
 
-                id_tracker      = {}
-                interval_counts = {k: 0 for k in VEHICLE_CLASSES}
+                id_tracker         = {}
+                interval_counts    = {k: 0 for k in VEHICLE_CLASSES}
+                fallback_centroids = []  # reset saat reconnect agar frame_id lama tidak menumpuk
 
                 while True:
                     raw = pipe_in.stdout.read(frame_size)
@@ -311,7 +312,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                         )[0]
 
                         last_boxes.clear()
-                        current_frame_ids = set()
 
                         for box in results.boxes:
                             cls_id = int(box.cls[0])
@@ -325,7 +325,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
 
                             if box.id is not None:
                                 track_id = int(box.id[0])
-                                current_frame_ids.add(track_id)
 
                                 # Update kapan terakhir ID ini muncul di frame
                                 id_tracker[track_id] = {
@@ -344,13 +343,35 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                         f"conf={conf:.2f} total={sum(total_counts.values())}")
                             else:
                                 # Fallback: YOLO detect tapi tidak dapat track_id
-                                # Hitung ke interval & total, tapi catat sebagai fallback
-                                interval_counts[label] += 1
-                                total_counts[label]    += 1
-                                fallback_count         += 1
-                                log(cctv_id, "warning",
-                                    f"FALLBACK (no track_id) label={label} conf={conf:.2f} "
-                                    f"total_fallback={fallback_count}")
+                                # Gunakan centroid untuk deduplicate
+                                cx = (x1 + x2) // 2
+                                cy = (y1 + y2) // 2
+
+                                # Hapus centroid lama yang sudah expire
+                                fallback_centroids[:] = [
+                                    c for c in fallback_centroids
+                                    if (frame_id - c[3]) <= FALLBACK_EXPIRE
+                                ]
+
+                                # Cek apakah centroid ini dekat dengan yang sudah ada
+                                is_duplicate = any(
+                                    abs(cx - c[0]) < FALLBACK_DIST_TH and
+                                    abs(cy - c[1]) < FALLBACK_DIST_TH and
+                                    label == c[2]
+                                    for c in fallback_centroids
+                                )
+
+                                if not is_duplicate:
+                                    fallback_centroids.append((cx, cy, label, frame_id))
+                                    interval_counts[label] += 1
+                                    total_counts[label]    += 1
+                                    fallback_count         += 1
+                                    log(cctv_id, "warning",
+                                        f"FALLBACK (no track_id) label={label} conf={conf:.2f} "
+                                        f"cx={cx} cy={cy} total_fallback={fallback_count}")
+                                else:
+                                    log(cctv_id, "info",
+                                        f"FALLBACK SKIP duplicate centroid label={label} cx={cx} cy={cy}")
 
                         # Hapus dari id_tracker kalau sudah lama tidak muncul
                         # TIDAK dihapus dari counted_ids → ini yang fix double count
@@ -363,8 +384,16 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                             # counted_ids.discard(tid) ← DIHAPUS, ini sumber double count
 
                         if len(counted_ids) > 10000:
-                            log(cctv_id, "warning",
-                             f"counted_ids besar ({len(counted_ids)}) tapi TIDAK ditrim → anti double count terjaga")
+                            # Trim ID lama yang sudah tidak ada di id_tracker
+                            # ID yang masih aktif di id_tracker TIDAK boleh dihapus
+                            active_ids   = set(id_tracker.keys())
+                            safe_to_trim = counted_ids - active_ids
+                            trim_count   = max(0, len(counted_ids) - 8000)
+                            if trim_count > 0 and safe_to_trim:
+                                to_remove = set(list(safe_to_trim)[:trim_count])
+                                counted_ids -= to_remove
+                                log(cctv_id, "warning",
+                                    f"counted_ids trimmed {trim_count} inactive IDs → sisa {len(counted_ids)}")
 
                         # Tulis ke shared dict yang dibaca Flask → Node.js → Frontend
                         # Pakai total_counts (akumulasi) bukan interval_counts
@@ -379,21 +408,22 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                             "timestamp":     time.time()
                         }
 
-                        # Simpan ke DB tiap COUNT_INTERVAL detik
-                        # Hanya interval_counts yang di-reset, bukan total_counts
-                        # counted_ids juga TIDAK di-reset → anti double count terjaga
                         if time.time() - last_count_time >= COUNT_INTERVAL:
-                            update_traffic_db(cctv_id, interval_counts)
-                            log(cctv_id, "info",
-                                f"DB saved interval={interval_counts} "
-                                f"total={total_counts} fallback={fallback_count}")
+                            snapshot = dict(interval_counts)  # simpan dulu sebelum reset
                             interval_counts = {k: 0 for k in VEHICLE_CLASSES}
-                            last_count_time = time.time()
+                            last_count_time = time.time()  # hard reset untuk hindari catch-up loop
+                            if any(v > 0 for v in snapshot.values()):  # jangan simpan jika semua 0
+                                update_traffic_db(cctv_id, snapshot)
+                                log(cctv_id, "info",
+                                    f"DB saved interval={snapshot} "
+                                    f"total={total_counts} fallback={fallback_count}")
 
                     for x1, y1, x2, y2, label, conf in last_boxes:
                         draw_modern_box(frame, x1, y1, x2, y2, label, conf)
 
-                    pipe_out.stdin.write(frame.tobytes())
+                    if pipe_out.stdin and not pipe_out.stdin.closed:
+                        pipe_out.stdin.write(frame.tobytes())
+                        pipe_out.stdin.flush()
 
             except Exception as e:
                 log(cctv_id, "error", f"STREAM ERROR: {str(e)}")

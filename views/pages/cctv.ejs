@@ -326,7 +326,6 @@
             location.href = '/monitor/' + id;
         }
 
-        // ====== FILTER TANGGAL (MODAL) ======
         function openFilterModal() {
             const s = localStorage.getItem("filterStartDate") || "";
             const e = localStorage.getItem("filterEndDate") || "";
@@ -578,8 +577,6 @@
                 summaryParams.set("startDate", today);
                 summaryParams.set("endDate", today);
 
-                // Fetch summary, per-lokasi, dan jam-arus secara PARALLEL
-                // Fetch snapshot — 1 request, 1 waktu, semua konsisten
                 const snap = await fetch(`/api/db/dashboard-snapshot?${summaryParams.toString()}`).then(r => r.json());
 
                 // Simpan per-lokasi dari snapshot
@@ -634,8 +631,6 @@
         document.getElementById("totalLokasi").innerText = cctv.split(',').length;
         document.getElementById("totalRiwayat").innerText = totalDB.toLocaleString('id-ID');
 
-        // ====== HITUNG JAM ARUS PER LOKASI dari data baru ======
-        // jamArusData = [{cctv_id, id, hour, total}, ...] sudah per CCTV per jam dari backend
         if (jamArusData.length > 0) {
             const lokasiIds = [...new Set(jamArusData.map(r => r.id))];
 
@@ -652,12 +647,7 @@
                     .map(([jam, total]) => ({ jam: parseInt(jam), total }))
                     .sort((a, b) => b.total - a.total);
                 if (arr.length === 0) return null;
-                                // ========================================
-                // LOGIKA JAM ARUS - UNTUK SIDANG TA
-                // tertinggi = arr[0]         → nilai terbesar setelah sort descending
-                // menengah  = arr[tengah]    → nilai median (posisi tengah array)
-                // terendah  = arr[terakhir]  → nilai terkecil (elemen paling akhir)
-                // ========================================
+
                 const medianIdx = Math.floor(arr.length / 2);
                 const jamMedian = arr[medianIdx]; 
                 return {
@@ -706,7 +696,6 @@
 
         } // tutup function renderRiwayat
 
-        // ====== CHART — ambil data dari API riwayat per jam ======
         async function updateArusChart() {
             const startDate = document.getElementById("riwayatStartDate").value;
             const endDate = document.getElementById("riwayatEndDate").value;
