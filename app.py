@@ -31,9 +31,6 @@ MAX_PROC = 2
 
 VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
 
-# (tracked_ids_per_cctv dihapus — tidak dipakai, counting dilakukan lewat counted_ids di run_cctv)
-
-# PENTING: kamu mau format ini selalu -> cctv_1, cctv_2, dst
 USE_PREFIX_CCTV = True
 # =========================================
 
@@ -97,7 +94,6 @@ def draw_modern_box(frame, x1, y1, x2, y2, label, conf):
     font = cv2.FONT_HERSHEY_SIMPLEX
     padding = 4
 
-    # gambar bounding box (kotak persegi) di sekitar objek yang terdeteksi
     cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
 
     text = f"{label} {conf:.2f}"
@@ -332,8 +328,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                     "last_frame": frame_id
                                 }
 
-                                # Hitung HANYA kalau belum pernah dihitung sama sekali
-                                # counted_ids tidak pernah dihapus → anti double count
                                 if track_id not in counted_ids:
                                     counted_ids.add(track_id)
                                     interval_counts[label] += 1
@@ -373,8 +367,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                     log(cctv_id, "info",
                                         f"FALLBACK SKIP duplicate centroid label={label} cx={cx} cy={cy}")
 
-                        # Hapus dari id_tracker kalau sudah lama tidak muncul
-                        # TIDAK dihapus dari counted_ids → ini yang fix double count
                         expired_ids = [
                             tid for tid, info in id_tracker.items()
                             if (frame_id - info["last_frame"]) > ID_EXPIRE_FRAMES
@@ -395,9 +387,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                 log(cctv_id, "warning",
                                     f"counted_ids trimmed {trim_count} inactive IDs → sisa {len(counted_ids)}")
 
-                        # Tulis ke shared dict yang dibaca Flask → Node.js → Frontend
-                        # Pakai total_counts (akumulasi) bukan interval_counts
-                        # supaya angka di frontend tidak turun/reset tiap 10 detik
                         shared_counts[cctv_id] = {
                             "car":           total_counts["car"],
                             "motorcycle":    total_counts["motorcycle"],

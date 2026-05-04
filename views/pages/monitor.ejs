@@ -36,9 +36,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  justify-content: space-between; /* ← item tersebar merata */
-  height: fit-content;            /* ← tidak melar ke bawah */
-  position: sticky;               /* ← ikut scroll tapi tetap kelihatan */
+  justify-content: space-between; 
+  height: fit-content;            
+  position: sticky;               
   top: 92px;
 }
 
@@ -258,7 +258,7 @@
         drag = false,
         sx = 0,
         sy = 0;
-      // ✅ GANTI JADI INI
+
        let hls = null;
         let retryCount = 0;
         let stallTimer = null;
@@ -269,7 +269,6 @@
       const apply = () =>
         (video.style.transform = `translate(${x}px,${y}px) scale(${scale})`);
 
-      // ✅ PASTE INI DI TEMPAT YANG TADI KOSONG
 
       function showOverlay(msg) {
         overlay.style.display = "flex";
@@ -282,13 +281,12 @@
 
       function startStallWatcher() {
   clearInterval(stallTimer);
-  let frozenCount = 0;   // untuk readyState < 3
-  let freezeCount = 0;   // untuk currentTime freeze
+  let frozenCount = 0;   
+  let freezeCount = 0;   
 
   stallTimer = setInterval(() => {
     if (video.paused || video.ended) return;
 
-    // Cek readyState — kalau kurang dari 3 berarti buffer kosong
     if (video.readyState < 3) {
       frozenCount++;
       console.warn(`[HLS] Buffer rendah (readyState=${video.readyState}) count=${frozenCount}`);
@@ -487,7 +485,6 @@
 
       init();
 
-      // ✅ Auto recovery saat tab aktif kembali
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
             setTimeout(() => {
@@ -495,18 +492,16 @@
                     retryCount = 0;
                     init();
                 }
-            }, 1500);  // cek setelah 1.5 detik, reconnect hanya kalau perlu
+            }, 1500);  
         }
     });
 
-      // ✅ Auto recovery saat koneksi internet kembali
       window.addEventListener("online", () => {
         console.warn("[HLS] Internet kembali, reconnect...");
         retryCount = 0;
         init();
       });
 
-      // ✅ BARU — hanya tambah destroy() di paling bawah
       return {
         zoomIn() {
           scale = Math.min(scale + 0.2, 5);
@@ -535,8 +530,6 @@
       };
     }
 
-   // ======= POLLING COUNT REAL-TIME =======
-    // Ambil cctv_id dari URL, misal /monitor/cctv_1 → "cctv_1"
     const cctvIdRaw = "<%= stream.id %>";
     const cctvId = cctvIdRaw.startsWith("cctv_")
       ? cctvIdRaw
@@ -554,7 +547,6 @@
           return;
         }
 
-        // Tampilkan count per jenis kendaraan (akumulasi total dari backend)
         document.getElementById("cnt-motorcycle").innerText = c.motorcycle ?? 0;
         document.getElementById("cnt-car").innerText        = c.car       ?? 0;
         document.getElementById("cnt-bus").innerText        = c.bus       ?? 0;

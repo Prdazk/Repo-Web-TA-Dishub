@@ -68,8 +68,6 @@ router.get("/counts", async (req: any, res: any) => {
       error.cause?.code === "ECONNREFUSED";
 
     if (isOffline) {
-      // Kembalikan data kosong yang valid, bukan error 500
-      // supaya frontend tidak crash saat Python belum siap
       return res.json({
         success: true,
         offline: true,
@@ -113,9 +111,6 @@ router.get("/server-health", async (req, res) => {
   }
 });
 
-// ============================
-// HELPERS
-// ============================
 function loadCctvMap() {
  const now = Date.now();
   if (_cctvMapCache && (now - _cctvMapCacheTime) < CCTV_CACHE_TTL) {
@@ -141,16 +136,11 @@ function safeParseInt(v: any, fallback: number) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-// Pastikan selalu "cctv_X" — tidak double prefix
-// Handles: "1" → "cctv_1", "cctv_1" → "cctv_1"
 function normalizeId(raw: string): string {
   const trimmed = raw.trim();
   return trimmed.startsWith("cctv_") ? trimmed : "cctv_" + trimmed;
 }
 
-// ============================
-// ROUTE /db/list
-// ============================
 router.get("/db/list", (req: any, res: any) => {
   try {
     const { cctvMap } = loadCctvMap();
@@ -166,9 +156,6 @@ router.get("/db/list", (req: any, res: any) => {
       ? String(ids).split(",").map(id => normalizeId(id))
       : [];
 
-    // ============================
-    // SQLITE MODE
-    // ============================
     if (USE_SQLITE_DB) {
       const db = getDb();
 
@@ -242,9 +229,6 @@ router.get("/db/list", (req: any, res: any) => {
       });
     }
 
-    // ============================
-    // JSON MODE (TESTER)
-    // ============================
     const trafficData = JSON.parse(fs.readFileSync(JSON_FILE, "utf-8"));
 
    let filtered = idList.length > 0
@@ -288,9 +272,6 @@ router.get("/db/list", (req: any, res: any) => {
   }
 });
 
-// ============================
-// ROUTE /db/summary
-// ============================
 router.get("/db/summary", (req: any, res: any) => {
   try {
     const { ids, startDate, endDate } = req.query;
@@ -383,9 +364,6 @@ router.get("/db/jam-arus", (req: any, res: any) => {
   }
 });
 
-// ============================
-// ROUTE /db/riwayat
-// ============================
 router.get("/db/riwayat", (req: any, res: any) => {
   try {
     const { cctvMap } = loadCctvMap();
@@ -452,9 +430,6 @@ router.get("/db/riwayat", (req: any, res: any) => {
   }
 });
 
-// ============================
-// ROUTE /db/per-lokasi
-// ============================
 router.get("/db/per-lokasi", (req: any, res: any) => {
   try {
     const { ids, startDate, endDate } = req.query;
@@ -505,9 +480,6 @@ router.get("/db/per-lokasi", (req: any, res: any) => {
   }
 });
 
-// ============================
-// ROUTE /db/dashboard-snapshot
-// ============================
 router.get("/db/dashboard-snapshot", (req: any, res: any) => {
   try {
     const { ids, startDate, endDate } = req.query;

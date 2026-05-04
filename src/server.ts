@@ -11,13 +11,11 @@ const app = createApp();
 const STREAM_FPS = Number(process.env.STREAM_FPS) || 20;
 const STREAM_HEIGHT = Number(process.env.STREAM_HEIGHT) || 360;
 
-/* ===================== EXPRESS ===================== */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running http://localhost:${PORT}`);
 });
 
-/* ===================== LOAD JSON ===================== */
 const configPath = path.join(process.cwd(), "config", "cctv.json");
 const config = fs.existsSync(configPath)
   ? JSON.parse(fs.readFileSync(configPath, "utf-8"))
@@ -31,7 +29,6 @@ interface StreamConfig {
 if(!process.env.HLS_CONVERTER_STOP) {
 const streams: StreamConfig[] = config.streams || [];
 
-/* ===================== HELPERS ===================== */
 const ensureDir = (d: string) =>
   !fs.existsSync(d) && fs.mkdirSync(d, { recursive: true });
 
@@ -64,7 +61,6 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
     ffmpeg = spawn("ffmpeg", [
       "-loglevel", "error",
 
-      // INPUT
       "-fflags", "nobuffer+discardcorrupt",
       "-flags", "low_delay",
       "-analyzeduration", "500000",

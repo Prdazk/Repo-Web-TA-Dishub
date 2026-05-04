@@ -9,7 +9,6 @@ const hlsPath = path.join(process.cwd(), "output");
 router.get("/{*id}", (req: any, res: any, next: any) => {
   const raw = req.params.id;
   const file = Array.isArray(raw) ? raw.join("/") : String(raw);
-  // ================= HEADERS =================k
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Accept-Ranges", "bytes");
 

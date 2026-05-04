@@ -30,14 +30,11 @@ export default function createApp() {
 
   app.set("view engine", "ejs");
 
-  // MIME fix HLS
   app.use(hlsMime);
   app.use(express.static("public", { maxAge: 0, index: false }));
-  // ROUTES
   app.use("/", pagesRouter);
   app.use("/hls", hlsRouter);
   app.use("/api", apiRouter);
-  // ERRORS
   app.get("/.well-known/appspecific/com.chrome.devtools.json", (_req, res) => {
     res.status(204).end();
   });
