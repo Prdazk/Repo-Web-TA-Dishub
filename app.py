@@ -80,8 +80,6 @@ def load_yolo():
     logging.info("YOLO loaded successfully")
     return model
 
-
-# ========= DRAW BOX =========
 COLORS = {
     "car": ((255, 100, 0), (200, 70, 0)),
     "motorcycle": ((0, 200, 255), (0, 160, 200)),
@@ -109,8 +107,6 @@ def draw_modern_box(frame, x1, y1, x2, y2, label, conf):
     cv2.rectangle(frame, (x1, bg_y1), (x1 + tw + padding * 2, bg_y2), bg_color, -1)
     cv2.putText(frame, text, (x1 + padding, bg_y2 - padding), font, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
 
-
-# ========= DB (SQLite) =========
 def create_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -130,7 +126,6 @@ def create_db():
         )
     ''')
 
-    # biar 1 record per (cctv_id, date, hour)
     cursor.execute('''
         CREATE UNIQUE INDEX IF NOT EXISTS uq_traffic_key
         ON traffic_data (cctv_id, date, hour)
