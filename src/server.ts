@@ -128,7 +128,7 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
     ws.on("message", (d) => {
       try {
-        // ✅ Cek ffmpeg masih hidup sebelum kirim data
+        // Cek ffmpeg masih hidup sebelum kirim data
         if (ffmpeg && ffmpeg.stdin.writable) {
           ffmpeg.stdin.write(d as Buffer);
         }

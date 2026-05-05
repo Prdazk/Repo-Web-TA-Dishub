@@ -1,1 +1,3 @@
 Daftar Lokasi Cctv Di kota madiun 
+ wss://cctv.villabs.id/streamer-jsmpeg/streamer/rejoagung3
+ wss://cctv.villabs.id/streamer-jsmpeg/streamer/seleko1

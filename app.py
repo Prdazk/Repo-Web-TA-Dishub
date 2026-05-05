@@ -336,8 +336,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                         f"NEW vehicle id={track_id} label={label} "
                                         f"conf={conf:.2f} total={sum(total_counts.values())}")
                             else:
-                                # Fallback: YOLO detect tapi tidak dapat track_id
-                                # Gunakan centroid untuk deduplicate
                                 cx = (x1 + x2) // 2
                                 cy = (y1 + y2) // 2
 
@@ -373,11 +371,8 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                         ]
                         for tid in expired_ids:
                             del id_tracker[tid]
-                            # counted_ids.discard(tid) ← DIHAPUS, ini sumber double count
 
                         if len(counted_ids) > 10000:
-                            # Trim ID lama yang sudah tidak ada di id_tracker
-                            # ID yang masih aktif di id_tracker TIDAK boleh dihapus
                             active_ids   = set(id_tracker.keys())
                             safe_to_trim = counted_ids - active_ids
                             trim_count   = max(0, len(counted_ids) - 8000)
@@ -419,7 +414,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 log(cctv_id, "error", traceback.format_exc())
                 log(cctv_id, "warning", "RECONNECTING in 3 seconds...")
 
-                # Matikan proses FFmpeg lama agar tidak menumpuk di background
                 try:
                     pipe_in.kill()
                     pipe_out.kill()
@@ -434,8 +428,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
         log(cctv_id, "error", f"FATAL ERROR: {str(e)}")
         log(cctv_id, "error", traceback.format_exc())
 
-
-# ========= MAIN =========
 def run_flask(shared_counts):
     logging.info("Starting Flask API on port 6327")
     from src.routes.apiSignal import set_shared_counts
@@ -452,7 +444,6 @@ if __name__ == "__main__":
     create_db()
     migrate_old_ids_to_prefixed()
 
-    # Shared dict antar process — ini yang bikin data bisa dibaca Flask
     manager = Manager()
     shared_counts = manager.dict()
 
