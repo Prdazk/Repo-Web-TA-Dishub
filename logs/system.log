@@ -185277,3 +185277,618 @@ tal=4
 2026-05-12 07:47:25,565 | INFO | [cctv_2] NEW vehicle id=115 label=motorcycle conf=0.72 total=25
 2026-05-12 07:47:25,681 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.56 cx=518 cy=62 total_fallback=1
 2026-05-12 07:47:25,681 | INFO | [cctv_2] FALLBACK SKIP duplicate centroid label=car cx=528 cy=107
+2026-05-13 09:34:51,500 | INFO | System starting...
+2026-05-13 09:34:55,618 | INFO | Starting Flask API on port 6327
+2026-05-13 09:34:55,644 | INFO | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:6327
+ * Running on http://192.168.1.3:6327
+2026-05-13 09:34:55,644 | INFO | [33mPress CTRL+C to quit[0m
+2026-05-13 09:34:59,120 | INFO | [cctv_1] Starting CCTV process
+2026-05-13 09:34:59,120 | INFO | Loading YOLO model...
+2026-05-13 09:34:59,128 | INFO | [cctv_2] Starting CCTV process
+2026-05-13 09:34:59,128 | INFO | Loading YOLO model...
+2026-05-13 09:34:59,357 | INFO | YOLO loaded successfully
+2026-05-13 09:34:59,358 | INFO | [cctv_2] CONNECTING to stream...
+2026-05-13 09:34:59,359 | INFO | YOLO loaded successfully
+2026-05-13 09:34:59,359 | INFO | [cctv_1] CONNECTING to stream...
+2026-05-13 09:34:59,368 | INFO | [cctv_2] CONNECTED
+2026-05-13 09:34:59,370 | INFO | [cctv_1] CONNECTED
+2026-05-13 09:35:02,873 | INFO | [cctv_1] NEW vehicle id=1 label=car conf=0.66 total=1
+2026-05-13 09:35:02,875 | INFO | [cctv_2] NEW vehicle id=2 label=car conf=0.82 total=2
+2026-05-13 09:35:02,875 | INFO | [cctv_1] NEW vehicle id=3 label=car conf=0.47 total=2
+2026-05-13 09:35:02,875 | INFO | [cctv_2] NEW vehicle id=3 label=motorcycle conf=0.66 total=3
+2026-05-13 09:35:02,875 | INFO | [cctv_1] NEW vehicle id=4 label=car conf=0.46 total=3
+2026-05-13 09:35:03,225 | INFO | [cctv_2] NEW vehicle id=13 label=car conf=0.73 total=4
+2026-05-13 09:35:03,590 | ERROR | [cctv_2] STREAM ERROR: Stream lost
+2026-05-13 09:35:03,590 | ERROR | [cctv_2] Traceback (most recent call last):
+  File "D:\Web Dishub TA\app.py", line 290, in run_cctv
+    raise RuntimeError("Stream lost")
+RuntimeError: Stream lost
+
+2026-05-13 09:35:03,590 | WARNING | [cctv_2] RECONNECTING in 3 seconds...
+2026-05-13 09:35:06,603 | INFO | [cctv_2] CONNECTING to stream...
+2026-05-13 09:35:06,611 | INFO | [cctv_2] CONNECTED
+2026-05-13 09:35:06,839 | INFO | [cctv_2] NEW vehicle id=28 label=car conf=0.83 total=5
+2026-05-13 09:35:07,007 | INFO | [cctv_2] NEW vehicle id=35 label=car conf=0.73 total=6
+2026-05-13 09:35:07,299 | ERROR | [cctv_2] STREAM ERROR: Stream lost
+2026-05-13 09:35:07,299 | ERROR | [cctv_2] Traceback (most recent call last):
+  File "D:\Web Dishub TA\app.py", line 290, in run_cctv
+    raise RuntimeError("Stream lost")
+RuntimeError: Stream lost
+
+2026-05-13 09:35:07,299 | WARNING | [cctv_2] RECONNECTING in 3 seconds...
+2026-05-13 09:35:10,306 | INFO | [cctv_2] CONNECTING to stream...
+2026-05-13 09:35:10,313 | INFO | [cctv_2] CONNECTED
+2026-05-13 09:35:10,549 | INFO | [cctv_2] NEW vehicle id=49 label=car conf=0.83 total=7
+2026-05-13 09:35:10,753 | INFO | [cctv_2] NEW vehicle id=55 label=car conf=0.73 total=8
+2026-05-13 09:35:11,077 | ERROR | [cctv_2] STREAM ERROR: Stream lost
+2026-05-13 09:35:11,077 | ERROR | [cctv_2] Traceback (most recent call last):
+  File "D:\Web Dishub TA\app.py", line 290, in run_cctv
+    raise RuntimeError("Stream lost")
+RuntimeError: Stream lost
+
+2026-05-13 09:35:11,078 | WARNING | [cctv_2] RECONNECTING in 3 seconds...
+2026-05-13 09:35:14,090 | INFO | [cctv_2] CONNECTING to stream...
+2026-05-13 09:35:14,097 | INFO | [cctv_2] CONNECTED
+2026-05-13 09:35:14,315 | INFO | [cctv_2] NEW vehicle id=70 label=car conf=0.83 total=9
+2026-05-13 09:35:14,480 | INFO | [cctv_2] NEW vehicle id=76 label=car conf=0.73 total=10
+2026-05-13 09:35:14,786 | ERROR | [cctv_2] STREAM ERROR: Stream lost
+2026-05-13 09:35:14,787 | ERROR | [cctv_2] Traceback (most recent call last):
+  File "D:\Web Dishub TA\app.py", line 290, in run_cctv
+    raise RuntimeError("Stream lost")
+RuntimeError: Stream lost
+
+2026-05-13 09:35:14,787 | WARNING | [cctv_2] RECONNECTING in 3 seconds...
+2026-05-13 09:35:17,801 | INFO | [cctv_2] CONNECTING to stream...
+2026-05-13 09:35:17,812 | INFO | [cctv_2] CONNECTED
+2026-05-13 09:35:26,672 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.75 cx=528 cy=74 total_fallback=1
+2026-05-13 09:35:26,677 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1}
+2026-05-13 09:35:26,679 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 10} fallback=1
+2026-05-13 09:35:26,751 | INFO | [cctv_2] NEW vehicle id=91 label=car conf=0.69 total=12
+2026-05-13 09:35:35,830 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 0, 'truck': 0}
+2026-05-13 09:35:35,830 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 0, 'truck': 0} total={'car': 3, 'motorcycle': 0, 'bus': 0, 'truck': 0} fallback=0
+2026-05-13 09:35:37,403 | INFO | [cctv_1] NEW vehicle id=7 label=car conf=0.65 total=4
+2026-05-13 09:35:38,070 | INFO | [cctv_1] NEW vehicle id=8 label=truck conf=0.50 total=5
+2026-05-13 09:35:38,256 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1}
+2026-05-13 09:35:38,257 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 11} fallback=1
+2026-05-13 09:35:38,331 | INFO | [cctv_2] NEW vehicle id=101 label=car conf=0.60 total=13
+2026-05-13 09:35:38,409 | INFO | [cctv_2] NEW vehicle id=104 label=car conf=0.51 total=14
+2026-05-13 09:35:39,727 | INFO | [cctv_1] NEW vehicle id=12 label=truck conf=0.66 total=6
+2026-05-13 09:35:41,614 | INFO | [cctv_1] NEW vehicle id=16 label=car conf=0.54 total=7
+2026-05-13 09:35:41,614 | INFO | [cctv_1] NEW vehicle id=17 label=car conf=0.49 total=8
+2026-05-13 09:35:43,548 | INFO | [cctv_2] NEW vehicle id=113 label=car conf=0.53 total=15
+2026-05-13 09:35:43,568 | INFO | [cctv_1] NEW vehicle id=22 label=car conf=0.52 total=9
+2026-05-13 09:35:44,267 | INFO | [cctv_1] NEW vehicle id=24 label=car conf=0.66 total=10
+2026-05-13 09:35:45,922 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 5, 'motorcycle': 0, 'bus': 0, 'truck': 2}
+2026-05-13 09:35:45,924 | INFO | [cctv_1] DB saved interval={'car': 5, 'motorcycle': 0, 'bus': 0, 'truck': 2} total={'car': 8, 'motorcycle': 0, 'bus': 0, 'truck': 2} fallback=0
+2026-05-13 09:35:46,558 | INFO | [cctv_1] NEW vehicle id=30 label=car conf=0.68 total=11
+2026-05-13 09:35:50,053 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 3}
+2026-05-13 09:35:50,054 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 3} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 14} fallback=1
+2026-05-13 09:35:52,526 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.55 cx=419 cy=170 total_fallback=1
+2026-05-13 09:35:52,677 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=motorcycle cx=384 cy=193
+2026-05-13 09:35:53,210 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.65 cx=189 cy=295 total_fallback=2
+2026-05-13 09:35:53,457 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.57 cx=335 cy=195 total_fallback=3
+2026-05-13 09:35:54,472 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.45 cx=518 cy=108 total_fallback=4
+2026-05-13 09:35:54,624 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=516 cy=110
+2026-05-13 09:35:54,767 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=513 cy=111
+2026-05-13 09:35:55,057 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=506 cy=115 total_fallback=5
+2026-05-13 09:35:55,147 | INFO | [cctv_2] NEW vehicle id=126 label=car conf=0.87 total=16
+2026-05-13 09:35:55,196 | INFO | [cctv_1] NEW vehicle id=68 label=car conf=0.76 total=17
+2026-05-13 09:35:55,706 | INFO | [cctv_1] NEW vehicle id=71 label=car conf=0.65 total=18
+2026-05-13 09:35:55,954 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 5, 'motorcycle': 3, 'bus': 0, 'truck': 0}
+2026-05-13 09:35:55,956 | INFO | [cctv_1] DB saved interval={'car': 5, 'motorcycle': 3, 'bus': 0, 'truck': 0} total={'car': 13, 'motorcycle': 3, 'bus': 0, 'truck': 2} fallback=5
+2026-05-13 09:35:56,243 | INFO | [cctv_1] NEW vehicle id=73 label=car conf=0.49 total=19
+2026-05-13 09:35:57,497 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.65 cx=403 cy=258 total_fallback=6
+2026-05-13 09:35:57,497 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.54 cx=379 cy=176 total_fallback=7
+2026-05-13 09:35:57,792 | INFO | [cctv_2] NEW vehicle id=128 label=car conf=0.66 total=17
+2026-05-13 09:35:57,956 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=350 cy=192
+2026-05-13 09:36:00,609 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 2}
+2026-05-13 09:36:00,612 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 2} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 16} fallback=1
+2026-05-13 09:36:01,748 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=561 cy=130 total_fallback=8
+2026-05-13 09:36:01,989 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.50 cx=179 cy=264 total_fallback=9
+2026-05-13 09:36:05,948 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 4, 'motorcycle': 1, 'bus': 0, 'truck': 0}
+2026-05-13 09:36:05,950 | INFO | [cctv_1] DB saved interval={'car': 4, 'motorcycle': 1, 'bus': 0, 'truck': 0} total={'car': 17, 'motorcycle': 4, 'bus': 0, 'truck': 2} fallback=9
+2026-05-13 09:36:06,969 | INFO | [cctv_1] NEW vehicle id=89 label=bus conf=0.48 total=24
+2026-05-13 09:36:07,046 | INFO | [cctv_1] NEW vehicle id=90 label=truck conf=0.52 total=25
+2026-05-13 09:36:07,391 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.68 cx=402 cy=145 total_fallback=10
+2026-05-13 09:36:07,462 | INFO | [cctv_1] NEW vehicle id=91 label=truck conf=0.46 total=27
+2026-05-13 09:36:07,539 | INFO | [cctv_1] NEW vehicle id=92 label=truck conf=0.47 total=28
+2026-05-13 09:36:13,219 | INFO | [cctv_1] NEW vehicle id=103 label=car conf=0.51 total=29
+2026-05-13 09:36:14,435 | INFO | [cctv_1] NEW vehicle id=111 label=car conf=0.51 total=30
+2026-05-13 09:36:14,841 | INFO | [cctv_1] NEW vehicle id=113 label=car conf=0.48 total=31
+2026-05-13 09:36:15,996 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 4}
+2026-05-13 09:36:15,997 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 4} total={'car': 20, 'motorcycle': 4, 'bus': 1, 'truck': 6} fallback=10
+2026-05-13 09:36:17,453 | INFO | [cctv_2] NEW vehicle id=158 label=car conf=0.65 total=18
+2026-05-13 09:36:21,778 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1}
+2026-05-13 09:36:21,780 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 1} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 17} fallback=1
+2026-05-13 09:36:26,519 | INFO | [cctv_1] NEW vehicle id=122 label=truck conf=0.50 total=32
+2026-05-13 09:36:27,948 | INFO | [cctv_1] NEW vehicle id=130 label=car conf=0.51 total=33
+2026-05-13 09:36:27,956 | INFO | [cctv_2] NEW vehicle id=170 label=car conf=0.73 total=19
+2026-05-13 09:36:28,368 | INFO | [cctv_1] NEW vehicle id=138 label=bus conf=0.49 total=34
+2026-05-13 09:36:30,784 | INFO | [cctv_1] NEW vehicle id=145 label=car conf=0.59 total=35
+2026-05-13 09:36:33,614 | INFO | [cctv_2] NEW vehicle id=172 label=car conf=0.70 total=20
+2026-05-13 09:36:33,618 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 2}
+2026-05-13 09:36:33,620 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 2} total={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 19} fallback=1
+2026-05-13 09:36:34,021 | INFO | [cctv_1] NEW vehicle id=155 label=truck conf=0.48 total=36
+2026-05-13 09:36:34,121 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.70 cx=394 cy=143 total_fallback=11
+2026-05-13 09:36:34,936 | INFO | [cctv_1] NEW vehicle id=156 label=car conf=0.47 total=38
+2026-05-13 09:36:36,573 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 2, 'truck': 2}
+2026-05-13 09:36:36,575 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 2, 'truck': 2} total={'car': 23, 'motorcycle': 4, 'bus': 3, 'truck': 8} fallback=11
+2026-05-13 09:36:39,823 | INFO | [cctv_1] NEW vehicle id=158 label=car conf=0.60 total=39
+2026-05-13 09:36:44,731 | INFO | [cctv_1] NEW vehicle id=164 label=truck conf=0.52 total=40
+2026-05-13 09:36:46,637 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 1, 'motorcycle': 0, 'bus': 0, 'truck': 1}
+2026-05-13 09:36:46,638 | INFO | [cctv_1] DB saved interval={'car': 1, 'motorcycle': 0, 'bus': 0, 'truck': 1} total={'car': 24, 'motorcycle': 4, 'bus': 3, 'truck': 9} fallback=11
+2026-05-13 09:36:47,014 | INFO | [cctv_1] NEW vehicle id=170 label=car conf=0.54 total=41
+2026-05-13 09:36:53,642 | INFO | [cctv_1] NEW vehicle id=176 label=car conf=0.47 total=42
+2026-05-13 09:36:55,354 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.49 cx=481 cy=62 total_fallback=2
+2026-05-13 09:36:55,468 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.63 cx=441 cy=77 total_fallback=3
+2026-05-13 09:36:55,470 | INFO | [cctv_2] FALLBACK SKIP duplicate centroid label=car cx=489 cy=63
+2026-05-13 09:36:55,572 | INFO | [cctv_2] NEW vehicle id=186 label=car conf=0.53 total=23
+2026-05-13 09:36:55,574 | INFO | [cctv_1] NEW vehicle id=181 label=bus conf=0.50 total=43
+2026-05-13 09:36:56,934 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 2, 'motorcycle': 0, 'bus': 1, 'truck': 0}
+2026-05-13 09:36:56,935 | INFO | [cctv_1] DB saved interval={'car': 2, 'motorcycle': 0, 'bus': 1, 'truck': 0} total={'car': 26, 'motorcycle': 4, 'bus': 4, 'truck': 9} fallback=11
+2026-05-13 09:36:59,888 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 2}
+2026-05-13 09:36:59,889 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 2} total={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 21} fallback=3
+2026-05-13 09:37:05,114 | INFO | [cctv_2] NEW vehicle id=194 label=motorcycle conf=0.68 total=24
+2026-05-13 09:37:05,364 | INFO | [cctv_1] NEW vehicle id=189 label=car conf=0.52 total=44
+2026-05-13 09:37:05,364 | INFO | [cctv_1] NEW vehicle id=190 label=car conf=0.52 total=45
+2026-05-13 09:37:05,364 | INFO | [cctv_1] NEW vehicle id=191 label=bus conf=0.47 total=46
+2026-05-13 09:37:06,982 | INFO | [cctv_1] NEW vehicle id=197 label=car conf=0.70 total=47
+2026-05-13 09:37:06,989 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 0}
+2026-05-13 09:37:06,990 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 0} total={'car': 29, 'motorcycle': 4, 'bus': 5, 'truck': 9} fallback=11
+2026-05-13 09:37:08,140 | INFO | [cctv_1] NEW vehicle id=200 label=car conf=0.71 total=48
+2026-05-13 09:37:08,237 | INFO | [cctv_1] NEW vehicle id=201 label=truck conf=0.54 total=49
+2026-05-13 09:37:08,434 | INFO | [cctv_2] NEW vehicle id=205 label=car conf=0.54 total=25
+2026-05-13 09:37:08,798 | INFO | [cctv_1] NEW vehicle id=205 label=bus conf=0.55 total=50
+2026-05-13 09:37:10,161 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 1}
+2026-05-13 09:37:10,164 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 1} total={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 22} fallback=3
+2026-05-13 09:37:10,899 | INFO | [cctv_2] NEW vehicle id=224 label=car conf=0.72 total=26
+2026-05-13 09:37:11,045 | INFO | [cctv_1] NEW vehicle id=210 label=truck conf=0.52 total=51
+2026-05-13 09:37:13,631 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.66 cx=480 cy=195 total_fallback=12
+2026-05-13 09:37:13,768 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=466 cy=207
+2026-05-13 09:37:13,768 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.51 cx=525 cy=130 total_fallback=13
+2026-05-13 09:37:13,872 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=442 cy=232
+2026-05-13 09:37:13,992 | INFO | [cctv_1] NEW vehicle id=216 label=car conf=0.70 total=54
+2026-05-13 09:37:16,583 | INFO | [cctv_2] NEW vehicle id=249 label=car conf=0.46 total=27
+2026-05-13 09:37:16,736 | INFO | [cctv_2] NEW vehicle id=252 label=motorcycle conf=0.62 total=28
+2026-05-13 09:37:16,814 | INFO | [cctv_1] NEW vehicle id=220 label=truck conf=0.62 total=55
+2026-05-13 09:37:17,040 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 2, 'truck': 3}
+2026-05-13 09:37:17,042 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 2, 'truck': 3} total={'car': 32, 'motorcycle': 4, 'bus': 7, 'truck': 12} fallback=13
+2026-05-13 09:37:20,243 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 2}
+2026-05-13 09:37:20,246 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 2} total={'motorcycle': 4, 'bus': 0, 'truck': 0, 'car': 24} fallback=3
+2026-05-13 09:37:22,611 | INFO | [cctv_2] NEW vehicle id=290 label=car conf=0.72 total=29
+2026-05-13 09:37:24,391 | INFO | [cctv_2] NEW vehicle id=296 label=car conf=0.50 total=30
+2026-05-13 09:37:24,793 | INFO | [cctv_2] NEW vehicle id=297 label=motorcycle conf=0.59 total=31
+2026-05-13 09:37:25,413 | INFO | [cctv_2] NEW vehicle id=302 label=car conf=0.82 total=32
+2026-05-13 09:37:25,772 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.67 cx=487 cy=120 total_fallback=14
+2026-05-13 09:37:25,773 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.49 cx=415 cy=181 total_fallback=15
+2026-05-13 09:37:26,099 | INFO | [cctv_1] NEW vehicle id=222 label=car conf=0.48 total=58
+2026-05-13 09:37:27,193 | INFO | [cctv_2] NEW vehicle id=306 label=truck conf=0.60 total=33
+2026-05-13 09:37:27,195 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 1}
+2026-05-13 09:37:27,197 | INFO | [cctv_1] DB saved interval={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 1} total={'car': 34, 'motorcycle': 4, 'bus': 7, 'truck': 13} fallback=15
+2026-05-13 09:37:27,916 | INFO | [cctv_2] NEW vehicle id=310 label=car conf=0.47 total=34
+2026-05-13 09:37:28,062 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.62 cx=20 cy=163 total_fallback=16
+2026-05-13 09:37:28,240 | INFO | [cctv_1] NEW vehicle id=228 label=truck conf=0.65 total=60
+2026-05-13 09:37:28,784 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.49 cx=131 cy=146 total_fallback=17
+2026-05-13 09:37:29,446 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.45 cx=261 cy=129 total_fallback=18
+2026-05-13 09:37:29,826 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=307 cy=123
+2026-05-13 09:37:29,985 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.61 cx=335 cy=120 total_fallback=19
+2026-05-13 09:37:30,071 | INFO | [cctv_1] NEW vehicle id=239 label=car conf=0.52 total=64
+2026-05-13 09:37:30,563 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=401 cy=111 total_fallback=20
+2026-05-13 09:37:30,596 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 1, 'car': 4}
+2026-05-13 09:37:30,597 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 1, 'car': 4} total={'motorcycle': 5, 'bus': 0, 'truck': 1, 'car': 28} fallback=3
+2026-05-13 09:37:30,883 | INFO | [cctv_1] NEW vehicle id=240 label=car conf=0.56 total=66
+2026-05-13 09:37:32,975 | INFO | [cctv_2] NEW vehicle id=320 label=motorcycle conf=0.59 total=35
+2026-05-13 09:37:34,722 | INFO | [cctv_2] NEW vehicle id=324 label=truck conf=0.53 total=36
+2026-05-13 09:37:34,800 | INFO | [cctv_2] NEW vehicle id=326 label=motorcycle conf=0.53 total=37
+2026-05-13 09:37:35,686 | INFO | [cctv_2] NEW vehicle id=331 label=motorcycle conf=0.49 total=38
+2026-05-13 09:37:35,811 | INFO | [cctv_2] NEW vehicle id=333 label=car conf=0.60 total=39
+2026-05-13 09:37:35,811 | INFO | [cctv_2] NEW vehicle id=334 label=car conf=0.50 total=40
+2026-05-13 09:37:36,425 | INFO | [cctv_2] NEW vehicle id=337 label=car conf=0.46 total=41
+2026-05-13 09:37:37,340 | INFO | [cctv_2] NEW vehicle id=339 label=motorcycle conf=0.67 total=42
+2026-05-13 09:37:37,389 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 6, 'motorcycle': 0, 'bus': 0, 'truck': 2}
+2026-05-13 09:37:37,391 | INFO | [cctv_1] DB saved interval={'car': 6, 'motorcycle': 0, 'bus': 0, 'truck': 2} total={'car': 40, 'motorcycle': 4, 'bus': 7, 'truck': 15} fallback=20
+2026-05-13 09:37:37,576 | INFO | [cctv_2] NEW vehicle id=341 label=car conf=0.75 total=43
+2026-05-13 09:37:37,682 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.50 cx=267 cy=128 total_fallback=21
+2026-05-13 09:37:38,147 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=truck cx=301 cy=124
+2026-05-13 09:37:38,340 | INFO | [cctv_1] NEW vehicle id=250 label=truck conf=0.47 total=68
+2026-05-13 09:37:38,588 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=345 cy=116 total_fallback=22
+2026-05-13 09:37:40,024 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.68 cx=384 cy=111 total_fallback=23
+2026-05-13 09:37:40,109 | INFO | [cctv_1] NEW vehicle id=253 label=car conf=0.50 total=71
+2026-05-13 09:37:41,286 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.45 cx=416 cy=107 total_fallback=24
+2026-05-13 09:37:41,408 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=427 cy=107
+2026-05-13 09:37:41,782 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 4, 'bus': 0, 'truck': 1, 'car': 4}
+2026-05-13 09:37:41,785 | INFO | [cctv_2] DB saved interval={'motorcycle': 4, 'bus': 0, 'truck': 1, 'car': 4} total={'motorcycle': 9, 'bus': 0, 'truck': 2, 'car': 32} fallback=3
+2026-05-13 09:37:41,955 | INFO | [cctv_2] NEW vehicle id=343 label=car conf=0.56 total=44
+2026-05-13 09:37:42,086 | INFO | [cctv_2] NEW vehicle id=345 label=car conf=0.87 total=45
+2026-05-13 09:37:44,446 | INFO | [cctv_2] NEW vehicle id=352 label=car conf=0.84 total=46
+2026-05-13 09:37:44,447 | INFO | [cctv_2] NEW vehicle id=353 label=car conf=0.83 total=47
+2026-05-13 09:37:45,435 | INFO | [cctv_2] NEW vehicle id=360 label=car conf=0.74 total=48
+2026-05-13 09:37:45,640 | INFO | [cctv_2] NEW vehicle id=363 label=car conf=0.77 total=49
+2026-05-13 09:37:46,188 | INFO | [cctv_2] NEW vehicle id=369 label=car conf=0.69 total=50
+2026-05-13 09:37:46,190 | INFO | [cctv_2] NEW vehicle id=370 label=motorcycle conf=0.47 total=51
+2026-05-13 09:37:46,190 | INFO | [cctv_2] NEW vehicle id=371 label=motorcycle conf=0.48 total=52
+2026-05-13 09:37:47,128 | INFO | [cctv_2] NEW vehicle id=385 label=car conf=0.73 total=53
+2026-05-13 09:37:47,453 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 4, 'motorcycle': 0, 'bus': 0, 'truck': 2}
+2026-05-13 09:37:47,455 | INFO | [cctv_1] DB saved interval={'car': 4, 'motorcycle': 0, 'bus': 0, 'truck': 2} total={'car': 44, 'motorcycle': 4, 'bus': 7, 'truck': 17} fallback=24
+2026-05-13 09:37:48,409 | INFO | [cctv_2] NEW vehicle id=395 label=car conf=0.74 total=54
+2026-05-13 09:37:49,740 | INFO | [cctv_2] NEW vehicle id=399 label=car conf=0.79 total=55
+2026-05-13 09:37:50,174 | INFO | [cctv_2] NEW vehicle id=401 label=car conf=0.84 total=56
+2026-05-13 09:37:50,692 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.51 cx=518 cy=108 total_fallback=25
+2026-05-13 09:37:50,796 | INFO | [cctv_1] NEW vehicle id=264 label=car conf=0.57 total=74
+2026-05-13 09:37:50,851 | INFO | [cctv_2] NEW vehicle id=402 label=truck conf=0.80 total=57
+2026-05-13 09:37:51,115 | INFO | [cctv_2] NEW vehicle id=404 label=car conf=0.57 total=58
+2026-05-13 09:37:51,874 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 1, 'car': 12}
+2026-05-13 09:37:51,876 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 1, 'car': 12} total={'motorcycle': 11, 'bus': 0, 'truck': 3, 'car': 44} fallback=3
+2026-05-13 09:37:51,993 | INFO | [cctv_2] NEW vehicle id=407 label=motorcycle conf=0.53 total=59
+2026-05-13 09:37:52,963 | INFO | [cctv_2] NEW vehicle id=409 label=car conf=0.87 total=60
+2026-05-13 09:37:52,963 | INFO | [cctv_2] NEW vehicle id=410 label=car conf=0.72 total=61
+2026-05-13 09:37:56,708 | INFO | [cctv_2] NEW vehicle id=421 label=car conf=0.63 total=62
+2026-05-13 09:37:56,708 | INFO | [cctv_2] NEW vehicle id=422 label=motorcycle conf=0.45 total=63
+2026-05-13 09:37:56,857 | INFO | [cctv_2] NEW vehicle id=423 label=car conf=0.47 total=64
+2026-05-13 09:37:57,734 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 0}
+2026-05-13 09:37:57,743 | INFO | [cctv_1] DB saved interval={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 0} total={'car': 46, 'motorcycle': 4, 'bus': 7, 'truck': 17} fallback=25
+2026-05-13 09:38:00,454 | INFO | [cctv_2] NEW vehicle id=426 label=car conf=0.52 total=65
+2026-05-13 09:38:00,479 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=226 cy=223 total_fallback=26
+2026-05-13 09:38:00,480 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.49 cx=35 cy=168 total_fallback=27
+2026-05-13 09:38:00,480 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.47 cx=224 cy=273 total_fallback=28
+2026-05-13 09:38:00,705 | INFO | [cctv_1] NEW vehicle id=284 label=truck conf=0.45 total=78
+2026-05-13 09:38:02,170 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 5}
+2026-05-13 09:38:02,172 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 5} total={'motorcycle': 13, 'bus': 0, 'truck': 3, 'car': 49} fallback=3
+2026-05-13 09:38:07,468 | INFO | [cctv_2] NEW vehicle id=445 label=motorcycle conf=0.52 total=66
+2026-05-13 09:38:07,719 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.47 cx=319 cy=223 total_fallback=29
+2026-05-13 09:38:07,899 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 2, 'motorcycle': 2, 'bus': 0, 'truck': 1}
+2026-05-13 09:38:07,901 | INFO | [cctv_1] DB saved interval={'car': 2, 'motorcycle': 2, 'bus': 0, 'truck': 1} total={'car': 48, 'motorcycle': 6, 'bus': 7, 'truck': 18} fallback=29
+2026-05-13 09:38:11,323 | INFO | [cctv_2] NEW vehicle id=447 label=motorcycle conf=0.51 total=67
+2026-05-13 09:38:12,237 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 0}
+2026-05-13 09:38:12,239 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 0} total={'motorcycle': 15, 'bus': 0, 'truck': 3, 'car': 49} fallback=3
+2026-05-13 09:38:12,764 | INFO | [cctv_2] NEW vehicle id=446 label=motorcycle conf=0.68 total=68
+2026-05-13 09:38:15,994 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.48 cx=378 cy=193 total_fallback=30
+2026-05-13 09:38:16,544 | INFO | [cctv_2] NEW vehicle id=516 label=car conf=0.61 total=69
+2026-05-13 09:38:16,545 | INFO | [cctv_2] NEW vehicle id=517 label=car conf=0.59 total=70
+2026-05-13 09:38:17,026 | INFO | [cctv_2] NEW vehicle id=521 label=car conf=0.50 total=71
+2026-05-13 09:38:17,958 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 0, 'motorcycle': 1, 'bus': 0, 'truck': 0}
+2026-05-13 09:38:17,962 | INFO | [cctv_1] DB saved interval={'car': 0, 'motorcycle': 1, 'bus': 0, 'truck': 0} total={'car': 48, 'motorcycle': 7, 'bus': 7, 'truck': 18} fallback=30
+2026-05-13 09:38:18,111 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.48 cx=423 cy=169 total_fallback=31
+2026-05-13 09:38:18,352 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=226 cy=142 total_fallback=32
+2026-05-13 09:38:18,662 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.55 cx=276 cy=134 total_fallback=33
+2026-05-13 09:38:19,693 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=318 cy=129
+2026-05-13 09:38:19,782 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.56 cx=336 cy=126 total_fallback=34
+2026-05-13 09:38:20,091 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=353 cy=124
+2026-05-13 09:38:20,230 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=368 cy=121
+2026-05-13 09:38:20,347 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=381 cy=119
+2026-05-13 09:38:20,478 | INFO | [cctv_2] NEW vehicle id=557 label=car conf=0.62 total=72
+2026-05-13 09:38:20,579 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.62 cx=393 cy=118 total_fallback=35
+2026-05-13 09:38:20,732 | INFO | [cctv_1] NEW vehicle id=334 label=car conf=0.75 total=86
+2026-05-13 09:38:20,840 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=412 cy=113
+2026-05-13 09:38:21,235 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=512 cy=108 total_fallback=36
+2026-05-13 09:38:21,673 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=508 cy=112
+2026-05-13 09:38:21,792 | INFO | [cctv_1] NEW vehicle id=337 label=car conf=0.53 total=88
+2026-05-13 09:38:22,484 | INFO | [cctv_2] NEW vehicle id=569 label=car conf=0.45 total=73
+2026-05-13 09:38:22,490 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 5}
+2026-05-13 09:38:22,492 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 5} total={'motorcycle': 16, 'bus': 0, 'truck': 3, 'car': 54} fallback=3
+2026-05-13 09:38:24,498 | INFO | [cctv_2] NEW vehicle id=594 label=car conf=0.57 total=74
+2026-05-13 09:38:25,291 | INFO | [cctv_2] NEW vehicle id=596 label=car conf=0.81 total=75
+2026-05-13 09:38:27,509 | INFO | [cctv_2] NEW vehicle id=604 label=car conf=0.55 total=76
+2026-05-13 09:38:28,017 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 7, 'motorcycle': 1, 'bus': 0, 'truck': 0}
+2026-05-13 09:38:28,017 | INFO | [cctv_1] DB saved interval={'car': 7, 'motorcycle': 1, 'bus': 0, 'truck': 0} total={'car': 55, 'motorcycle': 8, 'bus': 7, 'truck': 18} fallback=36
+2026-05-13 09:38:28,193 | INFO | [cctv_2] NEW vehicle id=610 label=car conf=0.58 total=77
+2026-05-13 09:38:28,194 | INFO | [cctv_2] NEW vehicle id=611 label=car conf=0.52 total=78
+2026-05-13 09:38:28,393 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.50 cx=333 cy=293 total_fallback=37
+2026-05-13 09:38:29,278 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.64 cx=394 cy=158 total_fallback=38
+2026-05-13 09:38:29,633 | INFO | [cctv_1] NEW vehicle id=343 label=car conf=0.47 total=91
+2026-05-13 09:38:30,765 | INFO | [cctv_2] NEW vehicle id=622 label=car conf=0.62 total=79
+2026-05-13 09:38:30,807 | INFO | [cctv_1] NEW vehicle id=348 label=car conf=0.64 total=92
+2026-05-13 09:38:32,358 | INFO | [cctv_2] NEW vehicle id=628 label=car conf=0.52 total=80
+2026-05-13 09:38:32,552 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 7}
+2026-05-13 09:38:32,554 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 7} total={'motorcycle': 16, 'bus': 0, 'truck': 3, 'car': 61} fallback=3
+2026-05-13 09:38:34,665 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.46 cx=587 cy=74 total_fallback=4
+2026-05-13 09:38:34,843 | INFO | [cctv_1] NEW vehicle id=357 label=truck conf=0.62 total=93
+2026-05-13 09:38:34,877 | INFO | [cctv_2] NEW vehicle id=634 label=car conf=0.50 total=82
+2026-05-13 09:38:35,201 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.77 cx=225 cy=209 total_fallback=5
+2026-05-13 09:38:35,624 | INFO | [cctv_2] NEW vehicle id=644 label=car conf=0.69 total=84
+2026-05-13 09:38:35,752 | INFO | [cctv_1] NEW vehicle id=360 label=car conf=0.66 total=94
+2026-05-13 09:38:38,003 | INFO | [cctv_2] NEW vehicle id=665 label=car conf=0.84 total=85
+2026-05-13 09:38:38,003 | INFO | [cctv_2] NEW vehicle id=666 label=motorcycle conf=0.65 total=86
+2026-05-13 09:38:38,003 | INFO | [cctv_2] NEW vehicle id=668 label=motorcycle conf=0.59 total=87
+2026-05-13 09:38:38,038 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 2}
+2026-05-13 09:38:38,040 | INFO | [cctv_1] DB saved interval={'car': 3, 'motorcycle': 0, 'bus': 1, 'truck': 2} total={'car': 58, 'motorcycle': 8, 'bus': 8, 'truck': 20} fallback=38
+2026-05-13 09:38:38,242 | INFO | [cctv_2] NEW vehicle id=673 label=car conf=0.62 total=88
+2026-05-13 09:38:39,457 | INFO | [cctv_2] NEW vehicle id=683 label=car conf=0.84 total=89
+2026-05-13 09:38:40,400 | INFO | [cctv_2] NEW vehicle id=696 label=car conf=0.57 total=90
+2026-05-13 09:38:40,628 | INFO | [cctv_2] NEW vehicle id=701 label=car conf=0.85 total=91
+2026-05-13 09:38:41,459 | INFO | [cctv_2] NEW vehicle id=704 label=car conf=0.51 total=92
+2026-05-13 09:38:42,136 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.49 cx=356 cy=134 total_fallback=39
+2026-05-13 09:38:42,446 | INFO | [cctv_2] NEW vehicle id=710 label=car conf=0.53 total=93
+2026-05-13 09:38:42,582 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 10}
+2026-05-13 09:38:42,583 | INFO | [cctv_2] DB saved interval={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 10} total={'motorcycle': 19, 'bus': 0, 'truck': 3, 'car': 71} fallback=5
+2026-05-13 09:38:43,060 | INFO | [cctv_2] NEW vehicle id=713 label=car conf=0.45 total=94
+2026-05-13 09:38:43,259 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.61 cx=22 cy=166 total_fallback=40
+2026-05-13 09:38:43,259 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=35 cy=158
+2026-05-13 09:38:43,365 | INFO | [cctv_1] NEW vehicle id=384 label=car conf=0.58 total=97
+2026-05-13 09:38:43,459 | INFO | [cctv_1] NEW vehicle id=386 label=car conf=0.46 total=98
+2026-05-13 09:38:45,105 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.49 cx=199 cy=285 total_fallback=41
+2026-05-13 09:38:45,215 | INFO | [cctv_1] NEW vehicle id=388 label=motorcycle conf=0.48 total=100
+2026-05-13 09:38:46,837 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.68 cx=358 cy=133 total_fallback=42
+2026-05-13 09:38:48,107 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 5, 'motorcycle': 2, 'bus': 0, 'truck': 0}
+2026-05-13 09:38:48,109 | INFO | [cctv_1] DB saved interval={'car': 5, 'motorcycle': 2, 'bus': 0, 'truck': 0} total={'car': 63, 'motorcycle': 10, 'bus': 8, 'truck': 20} fallback=42
+2026-05-13 09:38:48,341 | INFO | [cctv_2] NEW vehicle id=760 label=motorcycle conf=0.49 total=95
+2026-05-13 09:38:48,341 | INFO | [cctv_2] NEW vehicle id=761 label=car conf=0.50 total=96
+2026-05-13 09:38:49,170 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.45 cx=511 cy=113 total_fallback=43
+2026-05-13 09:38:49,279 | INFO | [cctv_1] NEW vehicle id=399 label=car conf=0.49 total=103
+2026-05-13 09:38:50,989 | INFO | [cctv_1] NEW vehicle id=400 label=car conf=0.46 total=104
+2026-05-13 09:38:51,982 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.63 cx=378 cy=126 total_fallback=44
+2026-05-13 09:38:51,983 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.55 cx=560 cy=130 total_fallback=45
+2026-05-13 09:38:51,983 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=497 cy=121 total_fallback=46
+2026-05-13 09:38:52,215 | INFO | [cctv_1] NEW vehicle id=412 label=car conf=0.46 total=108
+2026-05-13 09:38:52,358 | INFO | [cctv_2] NEW vehicle id=812 label=car conf=0.83 total=97
+2026-05-13 09:38:52,574 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 3}
+2026-05-13 09:38:52,576 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 3} total={'motorcycle': 20, 'bus': 0, 'truck': 3, 'car': 74} fallback=5
+2026-05-13 09:38:53,438 | INFO | [cctv_2] NEW vehicle id=833 label=motorcycle conf=0.60 total=98
+2026-05-13 09:38:54,219 | INFO | [cctv_2] NEW vehicle id=844 label=car conf=0.85 total=99
+2026-05-13 09:38:54,230 | INFO | [cctv_1] NEW vehicle id=415 label=car conf=0.46 total=109
+2026-05-13 09:38:55,203 | INFO | [cctv_2] NEW vehicle id=857 label=motorcycle conf=0.55 total=100
+2026-05-13 09:38:55,816 | INFO | [cctv_2] NEW vehicle id=866 label=motorcycle conf=0.47 total=101
+2026-05-13 09:38:58,113 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 8, 'motorcycle': 0, 'bus': 0, 'truck': 0}
+2026-05-13 09:38:58,114 | INFO | [cctv_1] DB saved interval={'car': 8, 'motorcycle': 0, 'bus': 0, 'truck': 0} total={'car': 71, 'motorcycle': 10, 'bus': 8, 'truck': 20} fallback=46
+2026-05-13 09:38:58,230 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.52 cx=530 cy=145 total_fallback=47
+2026-05-13 09:38:58,453 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=521 cy=129 total_fallback=48
+2026-05-13 09:38:58,559 | INFO | [cctv_1] NEW vehicle id=418 label=car conf=0.56 total=112
+2026-05-13 09:38:58,680 | INFO | [cctv_2] NEW vehicle id=878 label=car conf=0.45 total=102
+2026-05-13 09:38:58,815 | INFO | [cctv_2] NEW vehicle id=879 label=car conf=0.87 total=103
+2026-05-13 09:39:01,257 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=416 cy=281 total_fallback=49
+2026-05-13 09:39:01,427 | INFO | [cctv_1] NEW vehicle id=421 label=car conf=0.65 total=114
+2026-05-13 09:39:02,060 | INFO | [cctv_1] NEW vehicle id=424 label=car conf=0.80 total=115
+2026-05-13 09:39:02,664 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 3}
+2026-05-13 09:39:02,666 | INFO | [cctv_2] DB saved interval={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 3} total={'motorcycle': 23, 'bus': 0, 'truck': 3, 'car': 77} fallback=5
+2026-05-13 09:39:03,901 | INFO | [cctv_2] NEW vehicle id=912 label=motorcycle conf=0.55 total=104
+2026-05-13 09:39:04,146 | INFO | [cctv_2] NEW vehicle id=914 label=truck conf=0.71 total=105
+2026-05-13 09:39:04,293 | INFO | [cctv_1] NEW vehicle id=427 label=car conf=0.53 total=116
+2026-05-13 09:39:05,294 | INFO | [cctv_2] NEW vehicle id=911 label=motorcycle conf=0.52 total=106
+2026-05-13 09:39:05,604 | INFO | [cctv_2] NEW vehicle id=916 label=truck conf=0.72 total=107
+2026-05-13 09:39:05,836 | INFO | [cctv_2] NEW vehicle id=919 label=car conf=0.62 total=108
+2026-05-13 09:39:06,545 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.61 cx=298 cy=142 total_fallback=50
+2026-05-13 09:39:07,549 | INFO | [cctv_1] NEW vehicle id=433 label=bus conf=0.66 total=118
+2026-05-13 09:39:07,955 | INFO | [cctv_1] NEW vehicle id=436 label=car conf=0.52 total=119
+2026-05-13 09:39:07,955 | INFO | [cctv_1] NEW vehicle id=438 label=car conf=0.48 total=120
+2026-05-13 09:39:08,236 | INFO | [cctv_2] NEW vehicle id=920 label=car conf=0.51 total=109
+2026-05-13 09:39:08,242 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 9, 'motorcycle': 1, 'bus': 1, 'truck': 0}
+2026-05-13 09:39:08,244 | INFO | [cctv_1] DB saved interval={'car': 9, 'motorcycle': 1, 'bus': 1, 'truck': 0} total={'car': 80, 'motorcycle': 11, 'bus': 9, 'truck': 20} fallback=50
+2026-05-13 09:39:09,593 | INFO | [cctv_1] NEW vehicle id=444 label=car conf=0.47 total=121
+2026-05-13 09:39:09,999 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.51 cx=343 cy=139 total_fallback=51
+2026-05-13 09:39:10,140 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=560 cy=130 total_fallback=52
+2026-05-13 09:39:10,475 | INFO | [cctv_1] NEW vehicle id=449 label=car conf=0.54 total=124
+2026-05-13 09:39:12,765 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 2, 'car': 2}
+2026-05-13 09:39:12,766 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 2, 'car': 2} total={'motorcycle': 25, 'bus': 0, 'truck': 5, 'car': 79} fallback=5
+2026-05-13 09:39:12,856 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.56 cx=43 cy=156 total_fallback=53
+2026-05-13 09:39:13,173 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.60 cx=128 cy=183 total_fallback=54
+2026-05-13 09:39:13,174 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.49 cx=502 cy=155 total_fallback=55
+2026-05-13 09:39:13,448 | INFO | [cctv_1] NEW vehicle id=459 label=bus conf=0.50 total=128
+2026-05-13 09:39:13,710 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.54 cx=469 cy=194 total_fallback=56
+2026-05-13 09:39:13,845 | INFO | [cctv_1] NEW vehicle id=460 label=truck conf=0.60 total=130
+2026-05-13 09:39:14,014 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=313 cy=144 total_fallback=57
+2026-05-13 09:39:14,015 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=322 cy=144
+2026-05-13 09:39:14,610 | INFO | [cctv_2] NEW vehicle id=934 label=motorcycle conf=0.58 total=110
+2026-05-13 09:39:15,801 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=252 cy=212 total_fallback=58
+2026-05-13 09:39:16,260 | INFO | [cctv_1] NEW vehicle id=465 label=car conf=0.45 total=133
+2026-05-13 09:39:16,665 | INFO | [cctv_2] NEW vehicle id=936 label=car conf=0.53 total=111
+2026-05-13 09:39:16,756 | INFO | [cctv_2] NEW vehicle id=938 label=car conf=0.67 total=112
+2026-05-13 09:39:17,251 | INFO | [cctv_1] NEW vehicle id=466 label=car conf=0.80 total=134
+2026-05-13 09:39:18,320 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 9, 'motorcycle': 0, 'bus': 1, 'truck': 4}
+2026-05-13 09:39:18,322 | INFO | [cctv_1] DB saved interval={'car': 9, 'motorcycle': 0, 'bus': 1, 'truck': 4} total={'car': 89, 'motorcycle': 11, 'bus': 10, 'truck': 24} fallback=58
+2026-05-13 09:39:18,718 | INFO | [cctv_2] NEW vehicle id=963 label=motorcycle conf=0.67 total=113
+2026-05-13 09:39:19,412 | INFO | [cctv_2] NEW vehicle id=845 label=motorcycle conf=0.74 total=114
+2026-05-13 09:39:20,153 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.52 cx=421 cy=158 total_fallback=59
+2026-05-13 09:39:20,154 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.51 cx=502 cy=147 total_fallback=60
+2026-05-13 09:39:20,311 | INFO | [cctv_1] NEW vehicle id=473 label=bus conf=0.55 total=137
+2026-05-13 09:39:20,958 | INFO | [cctv_2] NEW vehicle id=989 label=car conf=0.59 total=115
+2026-05-13 09:39:21,728 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.77 cx=357 cy=291 total_fallback=61
+2026-05-13 09:39:22,819 | INFO | [cctv_1] NEW vehicle id=490 label=car conf=0.60 total=139
+2026-05-13 09:39:22,830 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 3}
+2026-05-13 09:39:22,833 | INFO | [cctv_2] DB saved interval={'motorcycle': 3, 'bus': 0, 'truck': 0, 'car': 3} total={'motorcycle': 28, 'bus': 0, 'truck': 5, 'car': 82} fallback=5
+2026-05-13 09:39:23,091 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=374 cy=165 total_fallback=62
+2026-05-13 09:39:24,928 | INFO | [cctv_1] NEW vehicle id=510 label=car conf=0.52 total=141
+2026-05-13 09:39:25,036 | INFO | [cctv_1] NEW vehicle id=512 label=car conf=0.59 total=142
+2026-05-13 09:39:25,257 | INFO | [cctv_1] NEW vehicle id=513 label=car conf=0.64 total=143
+2026-05-13 09:39:25,318 | INFO | [cctv_2] NEW vehicle id=1027 label=car conf=0.58 total=116
+2026-05-13 09:39:26,055 | INFO | [cctv_1] NEW vehicle id=500 label=car conf=0.57 total=144
+2026-05-13 09:39:28,152 | INFO | [cctv_2] NEW vehicle id=1032 label=car conf=0.85 total=117
+2026-05-13 09:39:28,409 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 7, 'motorcycle': 0, 'bus': 3, 'truck': 0}
+2026-05-13 09:39:28,410 | INFO | [cctv_1] DB saved interval={'car': 7, 'motorcycle': 0, 'bus': 3, 'truck': 0} total={'car': 96, 'motorcycle': 11, 'bus': 13, 'truck': 24} fallback=62
+2026-05-13 09:39:28,756 | INFO | [cctv_2] NEW vehicle id=1035 label=car conf=0.80 total=118
+2026-05-13 09:39:28,820 | INFO | [cctv_1] NEW vehicle id=524 label=truck conf=0.53 total=145
+2026-05-13 09:39:29,250 | INFO | [cctv_2] NEW vehicle id=1041 label=car conf=0.58 total=119
+2026-05-13 09:39:30,918 | INFO | [cctv_1] NEW vehicle id=539 label=truck conf=0.63 total=146
+2026-05-13 09:39:31,078 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=511 cy=115 total_fallback=63
+2026-05-13 09:39:31,231 | INFO | [cctv_2] NEW vehicle id=1074 label=car conf=0.64 total=120
+2026-05-13 09:39:31,351 | INFO | [cctv_1] NEW vehicle id=540 label=car conf=0.49 total=148
+2026-05-13 09:39:32,279 | INFO | [cctv_1] NEW vehicle id=542 label=car conf=0.58 total=149
+2026-05-13 09:39:32,837 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 5}
+2026-05-13 09:39:32,839 | INFO | [cctv_2] DB saved interval={'motorcycle': 0, 'bus': 0, 'truck': 0, 'car': 5} total={'motorcycle': 28, 'bus': 0, 'truck': 5, 'car': 87} fallback=5
+2026-05-13 09:39:33,081 | INFO | [cctv_2] NEW vehicle id=1087 label=truck conf=0.48 total=121
+2026-05-13 09:39:33,312 | INFO | [cctv_2] NEW vehicle id=1090 label=car conf=0.54 total=122
+2026-05-13 09:39:33,925 | INFO | [cctv_2] NEW vehicle id=1091 label=truck conf=0.58 total=123
+2026-05-13 09:39:38,031 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=343 cy=205 total_fallback=64
+2026-05-13 09:39:38,814 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 4, 'motorcycle': 0, 'bus': 0, 'truck': 2}
+2026-05-13 09:39:38,815 | INFO | [cctv_1] DB saved interval={'car': 4, 'motorcycle': 0, 'bus': 0, 'truck': 2} total={'car': 100, 'motorcycle': 11, 'bus': 13, 'truck': 26} fallback=64
+2026-05-13 09:39:38,833 | INFO | [cctv_2] NEW vehicle id=1124 label=car conf=0.76 total=124
+2026-05-13 09:39:38,974 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.66 cx=307 cy=115 total_fallback=6
+2026-05-13 09:39:39,102 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.79 cx=248 cy=131 total_fallback=7
+2026-05-13 09:39:39,118 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.50 cx=418 cy=51 total_fallback=8
+2026-05-13 09:39:39,226 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.77 cx=174 cy=145 total_fallback=9
+2026-05-13 09:39:39,673 | INFO | [cctv_2] NEW vehicle id=1142 label=car conf=0.67 total=129
+2026-05-13 09:39:41,866 | INFO | [cctv_2] NEW vehicle id=1154 label=car conf=0.48 total=130
+2026-05-13 09:39:42,920 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 3, 'bus': 0, 'truck': 2, 'car': 5}
+2026-05-13 09:39:42,923 | INFO | [cctv_2] DB saved interval={'motorcycle': 3, 'bus': 0, 'truck': 2, 'car': 5} total={'motorcycle': 31, 'bus': 0, 'truck': 7, 'car': 92} fallback=9
+2026-05-13 09:39:43,106 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.53 cx=446 cy=91 total_fallback=10
+2026-05-13 09:39:43,269 | INFO | [cctv_2] FALLBACK SKIP duplicate centroid label=motorcycle cx=417 cy=91
+2026-05-13 09:39:44,108 | INFO | [cctv_2] NEW vehicle id=1171 label=motorcycle conf=0.73 total=132
+2026-05-13 09:39:44,568 | INFO | [cctv_2] NEW vehicle id=1178 label=motorcycle conf=0.70 total=133
+2026-05-13 09:39:45,343 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=515 cy=110 total_fallback=65
+2026-05-13 09:39:45,446 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=451 cy=132 total_fallback=66
+2026-05-13 09:39:46,039 | INFO | [cctv_2] NEW vehicle id=1193 label=car conf=0.51 total=134
+2026-05-13 09:39:46,203 | INFO | [cctv_1] NEW vehicle id=561 label=car conf=0.55 total=153
+2026-05-13 09:39:46,224 | INFO | [cctv_2] NEW vehicle id=1201 label=car conf=0.56 total=135
+2026-05-13 09:39:46,501 | INFO | [cctv_1] NEW vehicle id=563 label=truck conf=0.54 total=154
+2026-05-13 09:39:47,578 | INFO | [cctv_2] NEW vehicle id=1218 label=car conf=0.51 total=136
+2026-05-13 09:39:47,613 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.48 cx=492 cy=108 total_fallback=67
+2026-05-13 09:39:47,957 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.54 cx=434 cy=180 total_fallback=68
+2026-05-13 09:39:48,098 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=truck cx=411 cy=195
+2026-05-13 09:39:48,246 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.49 cx=379 cy=217 total_fallback=69
+2026-05-13 09:39:48,367 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=331 cy=250 total_fallback=70
+2026-05-13 09:39:48,541 | INFO | [cctv_2] NEW vehicle id=1224 label=motorcycle conf=0.62 total=137
+2026-05-13 09:39:48,814 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 4, 'motorcycle': 0, 'bus': 1, 'truck': 3}
+2026-05-13 09:39:48,816 | INFO | [cctv_1] DB saved interval={'car': 4, 'motorcycle': 0, 'bus': 1, 'truck': 3} total={'car': 104, 'motorcycle': 11, 'bus': 14, 'truck': 29} fallback=70
+2026-05-13 09:39:49,429 | WARNING | [cctv_1] FALLBACK (no track_id) label=bus conf=0.48 cx=464 cy=119 total_fallback=71
+2026-05-13 09:39:49,493 | INFO | [cctv_2] NEW vehicle id=1226 label=motorcycle conf=0.51 total=138
+2026-05-13 09:39:49,529 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.46 cx=507 cy=110 total_fallback=72
+2026-05-13 09:39:50,003 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.51 cx=456 cy=121 total_fallback=73
+2026-05-13 09:39:50,004 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.47 cx=293 cy=227 total_fallback=74
+2026-05-13 09:39:50,117 | INFO | [cctv_2] NEW vehicle id=1232 label=car conf=0.74 total=139
+2026-05-13 09:39:50,255 | INFO | [cctv_1] NEW vehicle id=585 label=truck conf=0.57 total=163
+2026-05-13 09:39:52,298 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.45 cx=177 cy=144 total_fallback=75
+2026-05-13 09:39:52,615 | INFO | [cctv_2] NEW vehicle id=1271 label=motorcycle conf=0.75 total=140
+2026-05-13 09:39:52,637 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=488 cy=119 total_fallback=76
+2026-05-13 09:39:52,753 | INFO | [cctv_1] NEW vehicle id=592 label=car conf=0.51 total=166
+2026-05-13 09:39:52,916 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 6, 'bus': 0, 'truck': 0, 'car': 4}
+2026-05-13 09:39:52,918 | INFO | [cctv_2] DB saved interval={'motorcycle': 6, 'bus': 0, 'truck': 0, 'car': 4} total={'motorcycle': 37, 'bus': 0, 'truck': 7, 'car': 96} fallback=10
+2026-05-13 09:39:53,342 | INFO | [cctv_2] NEW vehicle id=1301 label=car conf=0.65 total=141
+2026-05-13 09:39:53,889 | INFO | [cctv_2] NEW vehicle id=1328 label=motorcycle conf=0.51 total=142
+2026-05-13 09:39:55,684 | INFO | [cctv_2] NEW vehicle id=1346 label=car conf=0.83 total=143
+2026-05-13 09:39:55,685 | INFO | [cctv_2] NEW vehicle id=1347 label=motorcycle conf=0.53 total=144
+2026-05-13 09:39:55,923 | INFO | [cctv_2] NEW vehicle id=1349 label=car conf=0.56 total=145
+2026-05-13 09:39:57,363 | INFO | [cctv_2] NEW vehicle id=1356 label=motorcycle conf=0.63 total=146
+2026-05-13 09:39:57,363 | INFO | [cctv_2] NEW vehicle id=1359 label=motorcycle conf=0.56 total=147
+2026-05-13 09:39:57,481 | INFO | [cctv_2] NEW vehicle id=1360 label=car conf=0.87 total=148
+2026-05-13 09:39:57,645 | INFO | [cctv_2] NEW vehicle id=1353 label=motorcycle conf=0.67 total=149
+2026-05-13 09:39:57,645 | INFO | [cctv_2] NEW vehicle id=1366 label=car conf=0.46 total=150
+2026-05-13 09:39:57,684 | INFO | [cctv_1] NEW vehicle id=606 label=car conf=0.50 total=167
+2026-05-13 09:39:58,303 | INFO | [cctv_1] NEW vehicle id=607 label=motorcycle conf=0.57 total=168
+2026-05-13 09:39:58,834 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 5, 'motorcycle': 2, 'bus': 1, 'truck': 2}
+2026-05-13 09:39:58,838 | INFO | [cctv_1] DB saved interval={'car': 5, 'motorcycle': 2, 'bus': 1, 'truck': 2} total={'car': 109, 'motorcycle': 13, 'bus': 15, 'truck': 31} fallback=76
+2026-05-13 09:40:00,273 | INFO | [cctv_1] NEW vehicle id=609 label=bus conf=0.76 total=169
+2026-05-13 09:40:03,415 | INFO | [cctv_2] NEW vehicle id=1394 label=motorcycle conf=0.63 total=151
+2026-05-13 09:40:03,433 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 6, 'bus': 0, 'truck': 0, 'car': 5}
+2026-05-13 09:40:03,435 | INFO | [cctv_2] DB saved interval={'motorcycle': 6, 'bus': 0, 'truck': 0, 'car': 5} total={'motorcycle': 43, 'bus': 0, 'truck': 7, 'car': 101} fallback=10
+2026-05-13 09:40:04,144 | INFO | [cctv_2] NEW vehicle id=1403 label=car conf=0.53 total=152
+2026-05-13 09:40:04,782 | WARNING | [cctv_2] FALLBACK (no track_id) label=motorcycle conf=0.74 cx=129 cy=129 total_fallback=11
+2026-05-13 09:40:04,782 | WARNING | [cctv_2] FALLBACK (no track_id) label=car conf=0.47 cx=572 cy=73 total_fallback=12
+2026-05-13 09:40:04,937 | INFO | [cctv_2] NEW vehicle id=1417 label=car conf=0.63 total=155
+2026-05-13 09:40:06,803 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.49 cx=215 cy=270 total_fallback=77
+2026-05-13 09:40:08,736 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.52 cx=216 cy=270 total_fallback=78
+2026-05-13 09:40:08,837 | INFO | [cctv_1] NEW vehicle id=626 label=motorcycle conf=0.50 total=172
+2026-05-13 09:40:08,860 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 0, 'motorcycle': 3, 'bus': 1, 'truck': 0}
+2026-05-13 09:40:08,860 | INFO | [cctv_1] DB saved interval={'car': 0, 'motorcycle': 3, 'bus': 1, 'truck': 0} total={'car': 109, 'motorcycle': 16, 'bus': 16, 'truck': 31} fallback=78
+2026-05-13 09:40:10,504 | INFO | [cctv_2] NEW vehicle id=1441 label=car conf=0.46 total=156
+2026-05-13 09:40:11,574 | INFO | [cctv_2] NEW vehicle id=1442 label=car conf=0.49 total=157
+2026-05-13 09:40:12,649 | INFO | [cctv_2] NEW vehicle id=1447 label=car conf=0.71 total=158
+2026-05-13 09:40:13,463 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 6}
+2026-05-13 09:40:13,464 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 6} total={'motorcycle': 44, 'bus': 0, 'truck': 7, 'car': 107} fallback=12
+2026-05-13 09:40:13,680 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.54 cx=462 cy=211 total_fallback=79
+2026-05-13 09:40:13,768 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=446 cy=233
+2026-05-13 09:40:14,532 | INFO | [cctv_2] NEW vehicle id=1459 label=car conf=0.54 total=159
+2026-05-13 09:40:14,677 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=423 cy=258
+2026-05-13 09:40:14,809 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.66 cx=391 cy=292 total_fallback=80
+2026-05-13 09:40:15,072 | INFO | [cctv_2] NEW vehicle id=1462 label=motorcycle conf=0.69 total=160
+2026-05-13 09:40:16,144 | INFO | [cctv_2] NEW vehicle id=1468 label=car conf=0.51 total=161
+2026-05-13 09:40:17,187 | INFO | [cctv_2] NEW vehicle id=1476 label=car conf=0.48 total=162
+2026-05-13 09:40:17,426 | INFO | [cctv_2] NEW vehicle id=1478 label=car conf=0.48 total=163
+2026-05-13 09:40:19,262 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 0}
+2026-05-13 09:40:19,263 | INFO | [cctv_1] DB saved interval={'car': 2, 'motorcycle': 0, 'bus': 0, 'truck': 0} total={'car': 111, 'motorcycle': 16, 'bus': 16, 'truck': 31} fallback=80
+2026-05-13 09:40:22,616 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.46 cx=216 cy=270 total_fallback=81
+2026-05-13 09:40:22,977 | INFO | [cctv_1] NEW vehicle id=638 label=motorcycle conf=0.52 total=176
+2026-05-13 09:40:23,005 | INFO | [cctv_2] NEW vehicle id=1497 label=car conf=0.48 total=164
+2026-05-13 09:40:23,479 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 5}
+2026-05-13 09:40:23,481 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 5} total={'motorcycle': 45, 'bus': 0, 'truck': 7, 'car': 112} fallback=12
+2026-05-13 09:40:24,566 | INFO | [cctv_2] NEW vehicle id=1510 label=motorcycle conf=0.65 total=165
+2026-05-13 09:40:25,218 | INFO | [cctv_1] NEW vehicle id=641 label=truck conf=0.45 total=177
+2026-05-13 09:40:26,320 | INFO | [cctv_1] NEW vehicle id=643 label=truck conf=0.58 total=178
+2026-05-13 09:40:27,760 | INFO | [cctv_2] NEW vehicle id=1530 label=car conf=0.45 total=166
+2026-05-13 09:40:28,503 | INFO | [cctv_2] NEW vehicle id=1532 label=car conf=0.49 total=167
+2026-05-13 09:40:29,380 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 0, 'motorcycle': 2, 'bus': 0, 'truck': 2}
+2026-05-13 09:40:29,382 | INFO | [cctv_1] DB saved interval={'car': 0, 'motorcycle': 2, 'bus': 0, 'truck': 2} total={'car': 111, 'motorcycle': 18, 'bus': 16, 'truck': 33} fallback=81
+2026-05-13 09:40:29,425 | INFO | [cctv_2] NEW vehicle id=1533 label=car conf=0.79 total=168
+2026-05-13 09:40:31,123 | INFO | [cctv_2] NEW vehicle id=1536 label=car conf=0.86 total=169
+2026-05-13 09:40:31,328 | INFO | [cctv_2] NEW vehicle id=1537 label=car conf=0.56 total=170
+2026-05-13 09:40:31,936 | INFO | [cctv_2] NEW vehicle id=1539 label=car conf=0.48 total=171
+2026-05-13 09:40:33,499 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 6}
+2026-05-13 09:40:33,500 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 0, 'car': 6} total={'motorcycle': 46, 'bus': 0, 'truck': 7, 'car': 118} fallback=12
+2026-05-13 09:40:36,057 | INFO | [cctv_2] NEW vehicle id=1561 label=motorcycle conf=0.57 total=172
+2026-05-13 09:40:38,741 | INFO | [cctv_2] NEW vehicle id=1575 label=car conf=0.64 total=173
+2026-05-13 09:40:38,889 | INFO | [cctv_2] NEW vehicle id=1578 label=truck conf=0.68 total=174
+2026-05-13 09:40:40,068 | INFO | [cctv_2] NEW vehicle id=1584 label=car conf=0.72 total=175
+2026-05-13 09:40:40,349 | INFO | [cctv_2] NEW vehicle id=1587 label=car conf=0.80 total=176
+2026-05-13 09:40:42,625 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.55 cx=336 cy=135 total_fallback=82
+2026-05-13 09:40:42,625 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.48 cx=154 cy=180 total_fallback=83
+2026-05-13 09:40:42,756 | INFO | [cctv_1] NEW vehicle id=670 label=car conf=0.75 total=181
+2026-05-13 09:40:44,275 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 1, 'bus': 0, 'truck': 1, 'car': 3}
+2026-05-13 09:40:44,277 | INFO | [cctv_2] DB saved interval={'motorcycle': 1, 'bus': 0, 'truck': 1, 'car': 3} total={'motorcycle': 47, 'bus': 0, 'truck': 8, 'car': 121} fallback=12
+2026-05-13 09:40:44,647 | INFO | [cctv_2] NEW vehicle id=1592 label=motorcycle conf=0.71 total=177
+2026-05-13 09:40:44,884 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.59 cx=367 cy=131 total_fallback=84
+2026-05-13 09:40:45,068 | INFO | [cctv_2] NEW vehicle id=1593 label=car conf=0.60 total=178
+2026-05-13 09:40:45,304 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=403 cy=121
+2026-05-13 09:40:45,409 | INFO | [cctv_1] NEW vehicle id=679 label=car conf=0.62 total=183
+2026-05-13 09:40:45,704 | INFO | [cctv_1] NEW vehicle id=682 label=car conf=0.71 total=184
+2026-05-13 09:40:45,958 | INFO | [cctv_2] NEW vehicle id=1595 label=car conf=0.79 total=179
+2026-05-13 09:40:46,191 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.56 cx=398 cy=118 total_fallback=85
+2026-05-13 09:40:46,336 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=409 cy=115
+2026-05-13 09:40:47,145 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=417 cy=113
+2026-05-13 09:40:47,285 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=427 cy=112
+2026-05-13 09:40:48,030 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=151 cy=178 total_fallback=86
+2026-05-13 09:40:49,040 | INFO | [cctv_2] NEW vehicle id=1649 label=car conf=0.80 total=180
+2026-05-13 09:40:49,511 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.46 cx=350 cy=128 total_fallback=87
+2026-05-13 09:40:49,643 | INFO | [cctv_2] NEW vehicle id=1657 label=car conf=0.74 total=181
+2026-05-13 09:40:49,644 | INFO | [cctv_2] NEW vehicle id=1659 label=car conf=0.51 total=182
+2026-05-13 09:40:50,011 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 7, 'motorcycle': 0, 'bus': 0, 'truck': 2}
+2026-05-13 09:40:50,012 | INFO | [cctv_1] DB saved interval={'car': 7, 'motorcycle': 0, 'bus': 0, 'truck': 2} total={'car': 118, 'motorcycle': 18, 'bus': 16, 'truck': 35} fallback=87
+2026-05-13 09:40:50,264 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.57 cx=122 cy=188 total_fallback=88
+2026-05-13 09:40:50,264 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.47 cx=397 cy=123 total_fallback=89
+2026-05-13 09:40:50,463 | WARNING | [cctv_1] FALLBACK (no track_id) label=truck conf=0.49 cx=343 cy=128 total_fallback=90
+2026-05-13 09:40:51,009 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.64 cx=244 cy=151 total_fallback=91
+2026-05-13 09:40:52,146 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.47 cx=216 cy=265 total_fallback=92
+2026-05-13 09:40:52,245 | INFO | [cctv_2] NEW vehicle id=1685 label=motorcycle conf=0.51 total=183
+2026-05-13 09:40:52,304 | INFO | [cctv_1] NEW vehicle id=694 label=motorcycle conf=0.50 total=193
+2026-05-13 09:40:52,450 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.52 cx=342 cy=130 total_fallback=93
+2026-05-13 09:40:52,613 | INFO | [cctv_2] NEW vehicle id=1689 label=car conf=0.51 total=184
+2026-05-13 09:40:52,615 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=356 cy=126
+2026-05-13 09:40:52,935 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=380 cy=121
+2026-05-13 09:40:53,232 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.50 cx=391 cy=118 total_fallback=94
+2026-05-13 09:40:54,217 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.51 cx=269 cy=203 total_fallback=95
+2026-05-13 09:40:54,234 | INFO | [cctv_2] NEW vehicle id=1693 label=car conf=0.74 total=185
+2026-05-13 09:40:54,438 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 7}
+2026-05-13 09:40:54,441 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 7} total={'motorcycle': 49, 'bus': 0, 'truck': 8, 'car': 128} fallback=12
+2026-05-13 09:40:54,546 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=270 cy=203
+2026-05-13 09:40:54,670 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.47 cx=419 cy=151 total_fallback=96
+2026-05-13 09:40:54,670 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=motorcycle cx=397 cy=181
+2026-05-13 09:40:54,712 | INFO | [cctv_2] NEW vehicle id=1696 label=car conf=0.47 total=186
+2026-05-13 09:40:54,832 | INFO | [cctv_1] NEW vehicle id=705 label=motorcycle conf=0.58 total=198
+2026-05-13 09:40:55,390 | WARNING | [cctv_1] FALLBACK (no track_id) label=motorcycle conf=0.46 cx=380 cy=194 total_fallback=97
+2026-05-13 09:40:55,524 | INFO | [cctv_1] NEW vehicle id=711 label=motorcycle conf=0.50 total=200
+2026-05-13 09:40:56,044 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.64 cx=516 cy=108 total_fallback=98
+2026-05-13 09:40:56,211 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=514 cy=111
+2026-05-13 09:40:56,462 | WARNING | [cctv_1] FALLBACK (no track_id) label=car conf=0.53 cx=336 cy=139 total_fallback=99
+2026-05-13 09:40:56,586 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=354 cy=134
+2026-05-13 09:40:56,702 | INFO | [cctv_1] FALLBACK SKIP duplicate centroid label=car cx=369 cy=131
+2026-05-13 09:40:57,357 | INFO | [cctv_1] NEW vehicle id=719 label=car conf=0.67 total=203
+2026-05-13 09:40:57,937 | INFO | [cctv_2] NEW vehicle id=1709 label=car conf=0.72 total=187
+2026-05-13 09:40:58,348 | INFO | [cctv_1] NEW vehicle id=721 label=car conf=0.70 total=204
+2026-05-13 09:40:58,348 | INFO | [cctv_1] NEW vehicle id=722 label=car conf=0.55 total=205
+2026-05-13 09:40:58,741 | INFO | [cctv_2] NEW vehicle id=1691 label=motorcycle conf=0.55 total=188
+2026-05-13 09:40:58,768 | INFO | [cctv_1] NEW vehicle id=725 label=car conf=0.68 total=206
+2026-05-13 09:41:00,073 | INFO | [cctv_1] Saved: cctv_1 2026-05-13 09 counts={'car': 12, 'motorcycle': 6, 'bus': 0, 'truck': 1}
+2026-05-13 09:41:00,075 | INFO | [cctv_1] DB saved interval={'car': 12, 'motorcycle': 6, 'bus': 0, 'truck': 1} total={'car': 130, 'motorcycle': 24, 'bus': 16, 'truck': 36} fallback=99
+2026-05-13 09:41:01,697 | INFO | [cctv_1] NEW vehicle id=731 label=car conf=0.54 total=207
+2026-05-13 09:41:02,085 | INFO | 127.0.0.1 - - [13/May/2026 09:41:02] "GET / HTTP/1.1" 200 -
+2026-05-13 09:41:02,791 | INFO | [cctv_1] NEW vehicle id=733 label=car conf=0.48 total=208
+2026-05-13 09:41:03,979 | INFO | [cctv_2] NEW vehicle id=1707 label=motorcycle conf=0.52 total=189
+2026-05-13 09:41:04,471 | INFO | [cctv_2] Saved: cctv_2 2026-05-13 09 counts={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 2}
+2026-05-13 09:41:04,471 | INFO | [cctv_2] DB saved interval={'motorcycle': 2, 'bus': 0, 'truck': 0, 'car': 2} total={'motorcycle': 51, 'bus': 0, 'truck': 8, 'car': 130} fallback=12
+2026-05-13 09:41:04,976 | INFO | [cctv_1] NEW vehicle id=737 label=car conf=0.50 total=209
+2026-05-13 09:41:04,977 | INFO | [cctv_1] NEW vehicle id=738 label=motorcycle conf=0.46 total=210
+2026-05-13 09:41:04,977 | INFO | [cctv_1] NEW vehicle id=734 label=motorcycle conf=0.47 total=211
+2026-05-13 09:41:05,652 | INFO | [cctv_2] NEW vehicle id=1715 label=car conf=0.50 total=190
+2026-05-13 09:41:07,775 | INFO | [cctv_1] NEW vehicle id=743 label=car conf=0.48 total=212
+2026-05-13 09:41:08,659 | INFO | [cctv_2] NEW vehicle id=1718 label=motorcycle conf=0.51 total=191
+2026-05-13 09:41:09,035 | INFO | [cctv_1] NEW vehicle id=744 label=car conf=0.54 total=213
+2026-05-13 09:41:09,035 | INFO | [cctv_2] NEW vehicle id=1719 label=motorcycle conf=0.53 total=192
