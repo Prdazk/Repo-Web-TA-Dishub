@@ -1,0 +1,7 @@
+tunnel: f1bdb868-efd5-4f8d-9cd7-51247d8ff117
+credentials-file: C:\Users\ASUS\.cloudflared\f1bdb868-efd5-4f8d-9cd7-51247d8ff117.json
+
+ingress:
+  - hostname: cctvyolodeteksi.my.id
+    service: http://localhost:3000
+  - service: http_status:404
