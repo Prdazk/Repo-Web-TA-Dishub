@@ -13,7 +13,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
-    <link href="/styles/main.rell.css" rel="stylesheet">
+    <link href="/styles/main.rell.css?v=<%= Date.now() %>" rel="stylesheet">
     <script src="/js/jquery-4.0.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css" />
     <script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
@@ -51,9 +51,9 @@
 
             <div class="cctv-grid">
                 <% streams.forEach((s, index)=> { %>
-                    <div class="video-box" onclick="openMonitor('<%= s.id %>')">
-                        <div class="video-thumb" style="height:240px;overflow:hidden;background:#1e293b;position:relative;">
-                            <img src="/thumb/<%= s.id %>/latest.jpg"
+                    <div class="video-box" style=" width: 100%;" onclick="openMonitor('<%= s.id %>')">
+                        <div class="video-thumb" style="height:240px; overflow:hidden;background:#1e293b;position:relative;">
+                            <img src="/thumb/<%= s.id %>/latest.jpg?v=<%= Date.now() %>"
                                 style="width:100%;height:100%;object-fit:cover;"
                                 onerror="this.style.display='none'">
                             <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#10b981;font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:1px;">
@@ -85,7 +85,7 @@
             <div id="modalLokasiTerpantau" onclick="this.style.display='none'" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                 <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:28px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                        <h3 style="margin:0;color:#1e3a5f;font-size:16px;">📍 Lokasi Terpantau</h3>
+                        <h3 style="margin:0;color:#1e3a5f;font-size:16px;"><i class="fa fa-map-marker"></i> Lokasi Terpantau</h3>
                         <span onclick="document.getElementById('modalLokasiTerpantau').style.display='none'" style="cursor:pointer;font-size:18px;color:#9ca3af;">✕</span>
                     </div>
                     <div id="modalLokasiTerpantauIsi" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -97,28 +97,28 @@
                     <div id="labelHariIni" style="font-size:10px;color:#9ca3af;margin-top:2px;"></div>
                     <h3 id="totalRiwayat" style="margin:4px 0;font-size:28px;line-height:1.1;">0</h3>
                     <div id="totalPerLokasi" style="margin-top:4px;font-size:12px;color:#9ca3af;line-height:1.8;"></div>
-                    <small style="color:#10b981;font-size:11px;margin-top:4px;display:block;">🔍 Klik untuk detail</small>
+                    <small style="color:#10b981;font-size:11px;margin-top:4px;display:block;"><i class="fa fa-info-circle"></i> Lihat detail</small>
                 </div>
                 <div class="card" onclick="bukaModalLokasi()" style="cursor:pointer;padding:14px 20px;" title="Klik untuk lihat lokasi">
                     <span style="font-size:11px;">Lokasi Terpantau</span>
                     <h3 id="totalLokasi" style="margin:4px 0;font-size:28px;line-height:1.1;"><%= streams.length %></h3>
-                    <small style="color:#3b82f6;font-size:11px;margin-top:4px;display:block;">🔍 Klik untuk detail</small>
+                    <small style="color:#3b82f6;font-size:11px;margin-top:4px;display:block;"><i class="fa fa-info-circle"></i> Klik untuk detail</small>
                 </div>
             </div>
 
                <div class="summary-small">
                 <div class="card" style="padding:20px 22px;">
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">🔺 Jam Arus Tertinggi</span>
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;"><i class="fa fa-arrow-up"></i> Jam Arus Tertinggi</span>
                     <div id="jamTertinggi" style="margin-top:8px;"></div>
                     <small id="labelJamTertinggi" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
                 <div class="card" style="padding:20px 22px;">
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">〰️ Jam Arus Menengah</span>
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;"><i class="fa fa-minus"></i> Jam Arus Menengah</span>
                     <div id="jamMenengah" style="margin-top:8px;"></div>
                     <small id="labelJamMenengah" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
                 <div class="card" style="padding:20px 22px;">
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">🔻 Jam Arus Terendah</span>
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;"><i class="fa fa-arrow-down"></i> Jam Arus Terendah</span>
                     <div id="jamTerendah" style="margin-top:8px;"></div>
                     <small id="labelJamTerendah" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
@@ -132,7 +132,7 @@
             <!-- Modal Export Excel -->
                 <div id="modalExcel" onclick="if(event.target===this)closeExcelModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
     <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                        <h3 style="margin:0 0 8px;color:#166534;font-size:18px;">📊 Export Excel</h3>
+                        <h3 style="margin:0 0 8px;color:#166534;font-size:18px;"><i class="fa fa-file-excel-o"></i> Export Excel</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
                         <input type="date" id="excelTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;-webkit-appearance:none;appearance:none;color:#374151;">
@@ -146,7 +146,7 @@
             <!-- Modal Export PDF -->
                 <div id="modalPDF" onclick="if(event.target===this)closePDFModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                          <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                        <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;">📄 Export PDF</h3>
+                        <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;"><i class="fa fa-file-pdf-o"></i> Export PDF</h3>
                         <p style="margin:0 0 20px;color:#6b7280;font-size:13px;">Pilih tanggal data yang ingin diekspor</p>
                         <label style="font-size:13px;color:#374151;font-weight:600;">Tanggal</label>
                         <input type="date" id="pdfTanggal" style="width:100%;margin-top:6px;margin-bottom:20px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;-webkit-appearance:none;appearance:none;color:#374151;">
@@ -160,7 +160,7 @@
                 <!-- Modal Tidak Ada Data -->
                 <div id="modalTidakAdaData" onclick="if(event.target===this)closeModalTidakAdaData()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center;">
                     <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:36px 32px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center;">
-                        <div style="font-size:52px;margin-bottom:12px;">📭</div>
+                        <div style="font-size:36px;margin-bottom:12px;color:#9ca3af;"><i class="fa fa-inbox"></i></div>
                         <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;font-weight:700;">Tidak Ada Data</h3>
                         <p id="modalTidakAdaDataPesan" style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;"></p>
                         <button onclick="closeModalTidakAdaData()" style="padding:11px 32px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">OK, Mengerti</button>
@@ -171,7 +171,7 @@
                 <div id="modalFilter" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                     <div style="background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                            <span style="font-size:22px;">📅</span>
+                            <span style="font-size:18px;"><i class="fa fa-calendar"></i></span>
                             <h3 style="margin:0;color:#1e3a5f;font-size:18px;">Filter Tanggal</h3>
                         </div>
                         <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">Pilih rentang tanggal data yang ingin ditampilkan</p>
@@ -268,7 +268,7 @@
                 <div id="modalRiwayatFilter" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                     <div style="background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                            <span style="font-size:22px;">📊</span>
+                            <span style="font-size:18px;"><i class="fa fa-calendar"></i></span>
                             <h3 style="margin:0;color:#1e3a5f;font-size:18px;">Filter Riwayat</h3>
                         </div>
                         <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">Pilih rentang tanggal riwayat yang ingin ditampilkan</p>
@@ -545,10 +545,10 @@
                             <td>${d.id}</td>
                             <td>${d.date}</td>
                             <td>${d.hour}:00</td>
-                            <td><span style="font-size:18px;">🏍️</span> ${d.motorcycle}</td>
-                            <td><span style="font-size:18px;">🚗</span> ${d.car}</td>
-                            <td><span style="font-size:18px;">🚌</span> ${d.bus}</td>
-                            <td><span style="font-size:18px;">🚛</span> ${d.truck}</td>
+                            <td><span style="font-size:18px;"><i class="fa fa-motorcycle" aria-hidden="true"></i></span> ${d.motorcycle}</td>
+                            <td><span style="font-size:18px;"><i class="fa fa-car" aria-hidden="true"></i></span> ${d.car}</td>
+                            <td><span style="font-size:18px;"><i class="fa fa-bus" aria-hidden="true"></i></span> ${d.bus}</td>
+                            <td><span style="font-size:18px;"><i class="fa fa-truck" aria-hidden="true"></i></span> ${d.truck}</td>
                             <td><strong>${total}</strong></td>
                         </tr>`;
                 });
@@ -563,7 +563,7 @@
                 if (labelHariIni) {
                     const filterStart = localStorage.getItem("filterStartDate");
                     if (filterStart && filterStart !== today) {
-                        labelHariIni.innerText = "⚠️ Selalu menampilkan data hari ini";
+                        labelHariIni.innerText = "* Selalu menampilkan data hari ini";
                     } else {
                         labelHariIni.innerText = "";
                     }
@@ -609,7 +609,7 @@
                 // Tampilkan label fallback di card
                 ["labelJamTertinggi","labelJamMenengah","labelJamTerendah"].forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.innerText = jamLabel === "data kemarin" ? "📅 Menampilkan data kemarin" : "";
+                    if (el) el.innerText = jamLabel === "data kemarin" ? "* Menampilkan data kemarin" : "";
                 });
 
                 renderRiwayat(snap.total_kendaraan ?? 0, totalSemua, lokasiSet, jamArusData, _perLokasiHariIni);
@@ -720,7 +720,7 @@
 
             if (chartData.length === 0) {
                 arusChartInstance = new Chart(ctx, {
-                    type: 'line',
+                    type: 'bar',
                     data: { labels: [], datasets: [] },
                     options: {
                         responsive: true,
@@ -758,7 +758,7 @@
             });
 
             arusChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: allJam.map(j => j + ":00"),
                     datasets: datasetsChart
@@ -793,7 +793,7 @@
                     boxWidth: 8,
                     boxHeight: 8,
                     callbacks: {
-                        title: items => `🕐 Jam ${items[0].label}`,
+                        title: items => `Jam ${items[0].label}`,
                         label: ctx => {
                             const nama = ctx.dataset.label.split(' - ').slice(1).join(' - ') || ctx.dataset.label;
                             return `  ${nama}: ${ctx.parsed.y.toLocaleString('id-ID')} kendaraan`;
@@ -983,7 +983,7 @@
                 </head>
                 <body>
                     <div class="header">
-                        <h2>📊 Laporan Data Kendaraan</h2>
+                        <h2>Laporan Data Kendaraan</h2>
                         <div class="meta">
                             <span>Tanggal: <strong>${tglFormatted}</strong></span>
                             <span>Total Baris: <strong>${j.data.length}</strong></span>
@@ -1203,10 +1203,10 @@
                                 box-shadow:0 1px 3px rgba(0,0,0,0.07);
                             ">
                                 <span style="font-weight:600;color:#111827;min-width:150px;">
-                                    📅 ${formatTanggal(tgl)}
+                                    ${formatTanggal(tgl)}
                                 </span>
                                 <span style="color:#9ca3af;">•</span>
-                                <span style="color:#374151;flex:1;">📍 ${row.id}</span>
+                                <span style="color:#374151;flex:1;"><i class="fa fa-map-marker"></i> ${row.id}</span>
                                 <span style="color:#9ca3af;">•</span>
                                 <span style="font-weight:700;color:#10b981;">
                                     Total ${row.total.toLocaleString('id-ID')} Kendaraan
@@ -1222,7 +1222,7 @@
             } catch (e) {
             console.error(e);
             document.getElementById("listRiwayat").innerHTML =
-                '<p style="color:#ef4444;padding:20px;">⚠️ Gagal memuat data riwayat.</p>';
+                '<p style="color:#ef4444;padding:20px;"><i class="fa fa-exclamation-triangle"></i> Gagal memuat data riwayat.</p>'
         }
         }
 
@@ -1271,7 +1271,7 @@
             } else {
                 isi.innerHTML = items.map(([id, total]) => `
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:10px;">
-                        <span style="font-size:13px;color:#374151;font-weight:500;">📍 ${id}</span>
+                        <span style="font-size:13px;color:#374151;font-weight:500;"><i class="fa fa-map-marker"></i> ${id}</span>
                         <strong style="color:#10b981;font-size:15px;">${total.toLocaleString('id-ID')}</strong>
                     </div>
                 `).join('');
@@ -1296,7 +1296,7 @@
             const streams = "<%= streams.map(s => s.lokasi).join('||') %>".split('||');
             isi.innerHTML = streams.map((lok) => `
                 <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:10px;">
-                    <span style="font-size:20px;">📍</span>
+                   <i class="fa fa-map-marker" style="color:#3b82f6;font-size:16px;"></i>
                     <span style="font-size:13px;color:#1e3a5f;font-weight:500;">${lok}</span>
                 </div>
             `).join('');
