@@ -27,7 +27,7 @@
 
     <div class="sidebar">
         <div style="text-align:center;margin-bottom:20px;">
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:#10b981;">
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#10b981;font-family:'Inter',sans-serif;">
                 Web <span style="color:#fff;">Monitoring</span>
             </h1>
             <div style="font-size:12px;color:#cbd5f5;margin-top:4px;">
@@ -46,7 +46,7 @@
     <div class="main-wrapper">
 
         <section id="dashboard" class="active">
-            <h2>Dashboard CCTV</h2>
+            <h2 style="font-family:'Orbitron',sans-serif;">Dashboard CCTV</h2>
             <p id="message-health"></p>
 
             <div class="cctv-grid">
@@ -113,7 +113,7 @@
                     <small id="labelJamTertinggi" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
                 <div class="card" style="padding:20px 22px;">
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;"><i class="fa fa-minus"></i> Jam Arus Menengah</span>
+                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;"><i class="fa fa-minus"></i> Jam Arus Rata-rata</span>
                     <div id="jamMenengah" style="margin-top:8px;"></div>
                     <small id="labelJamMenengah" style="color:#9ca3af;font-size:10px;"></small>
                 </div>
@@ -163,7 +163,7 @@
                         <div style="font-size:36px;margin-bottom:12px;color:#9ca3af;"><i class="fa fa-inbox"></i></div>
                         <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;font-weight:700;">Tidak Ada Data</h3>
                         <p id="modalTidakAdaDataPesan" style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;"></p>
-                        <button onclick="closeModalTidakAdaData()" style="padding:11px 32px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">OK, Mengerti</button>
+                        <button onclick="closeModalTidakAdaData()" style="padding:11px 32px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Tutup</button>
                     </div>
                 </div>
 
@@ -480,7 +480,7 @@
         if (savedPage) {
             const p = parseInt(savedPage, 10);
             if (!isNaN(p) && p > 0) currentPage = p;
-            // validasi final terhadap totalPage dilakukan di dalam loadKendaraan()
+            // validasi halaman
         }
 
         function buildListUrl() {
@@ -492,7 +492,7 @@
             params.set("page", String(currentPage));
             params.set("limit", String(limit));
 
-            // kirim filter kalau ada
+            //  filter 
             if (startDate) params.set("startDate", startDate);
             if (endDate) params.set("endDate", endDate);
 
@@ -505,7 +505,7 @@
             if (isLoadingKendaraan) return;
             isLoadingKendaraan = true;
             try {
-                // clear pesan (nanti diisi lagi kalau ada error)
+                // reset pesan
                 document.getElementById("message-health").innerText = "";
 
                 const url = buildListUrl();
@@ -525,7 +525,7 @@
                 let totalData = j.total || 0;
                 let totalPage = Math.ceil(totalData / limit) || 1;
 
-                // Validasi currentPage agar tidak melebihi totalPage
+                // cek batas halaman
                 if (currentPage > totalPage) {
                     currentPage = totalPage;
                     localStorage.setItem("currentPage", String(currentPage));
@@ -558,7 +558,6 @@
                 const now = new Date();
                 const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-                // ← TAMBAHKAN INI
                 const labelHariIni = document.getElementById("labelHariIni");
                 if (labelHariIni) {
                     const filterStart = localStorage.getItem("filterStartDate");
@@ -575,7 +574,7 @@
 
                 const snap = await fetch(`/api/db/dashboard-snapshot?${summaryParams.toString()}`).then(r => r.json());
 
-                // Simpan per-lokasi dari snapshot
+               // per lokasi
                 const perLokasiHariIni = {};
                 (snap.perLokasi || []).forEach(row => {
                     perLokasiHariIni[row.id] = row.total;
@@ -585,7 +584,7 @@
                 let jamArusData = snap.jamArus || [];
                 let jamLabel = "hari ini";
 
-                // Fallback ke kemarin kalau hari ini belum ada data
+                // fallback kemarin
                 const totalKendaraanHariIni = snap.total_kendaraan ?? 0;
                 const maxJamUnik = (snap.perLokasi || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
 
@@ -606,7 +605,7 @@
                     }
                 }
 
-                // Tampilkan label fallback di card
+               // label fallback
                 ["labelJamTertinggi","labelJamMenengah","labelJamTerendah"].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = jamLabel === "data kemarin" ? "* Menampilkan data kemarin" : "";
@@ -617,9 +616,9 @@
             } catch (e) {
                 console.error(e);
                 document.getElementById("message-health").innerText =
-                    "Terjadi error saat memuat data. Cek console / API.";
+                    "Gagal memuat data. Silakan coba lagi.";
             } finally {
-                isLoadingKendaraan = false; // ← wajib ada agar bisa load lagi
+                isLoadingKendaraan = false; 
             }
         }
 
@@ -630,7 +629,7 @@
         if (jamArusData.length > 0) {
             const lokasiIds = [...new Set(jamArusData.map(r => r.id))];
 
-            // Susun per lokasi: { "cctv_1 - Lokasi A": { 7: 120, 8: 310, ... } }
+            // susun per lokasi
             const jamPerLokasi = {};
             lokasiIds.forEach(id => { jamPerLokasi[id] = {}; });
             jamArusData.forEach(row => {
@@ -709,7 +708,7 @@
                 const snap = await res.json();
                 chartData = snap.jamArus || [];
             } catch(e) {
-                console.error("Gagal fetch chart data:", e);
+                console.error("chart error:", e);
             }
 
             const allJam = [...new Set(chartData.map(r => parseInt(r.hour, 10)))].sort((a, b) => a - b);
@@ -830,14 +829,13 @@
 
             pagination.dataset.totalPage = totalPage;
 
-            const maxBtn = 10; // tampilkan max 10 tombol halaman
+            const maxBtn = 10; 
             let startPage = Math.max(1, currentPage - 4);
             let endPage = Math.min(totalPage, startPage + maxBtn - 1);
             if (endPage - startPage < maxBtn - 1) {
                 startPage = Math.max(1, endPage - maxBtn + 1);
             }
 
-            // Prev
             const prevBtn = document.createElement('button');
             prevBtn.className = 'page-btn';
             prevBtn.innerText = '«';
@@ -1207,9 +1205,8 @@
                                 </span>
                                 <span style="color:#9ca3af;">•</span>
                                 <span style="color:#374151;flex:1;"><i class="fa fa-map-marker"></i> ${row.id}</span>
-                                <span style="color:#9ca3af;">•</span>
                                 <span style="font-weight:700;color:#10b981;">
-                                    Total ${row.total.toLocaleString('id-ID')} Kendaraan
+                                    ${row.total.toLocaleString('id-ID')} kendaraan
                                 </span>
                             </div>
                         `).join('');

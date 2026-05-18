@@ -552,12 +552,12 @@
         document.getElementById("cnt-bus").innerText        = c.bus       ?? 0;
         document.getElementById("cnt-truck").innerText      = c.truck     ?? 0;
 
-        // Total semua jenis
+        // Total 
         const total = (c.motorcycle ?? 0) + (c.car   ?? 0)
                     + (c.bus        ?? 0) + (c.truck  ?? 0);
         document.getElementById("cnt-total").innerText = total;
 
-        // Status Live
+        // Status 
         const statusEl = document.getElementById("panel-status");
         statusEl.innerText = "Live";
         statusEl.style.background = "#134e4a";
