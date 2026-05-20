@@ -2,8 +2,8 @@
     "streams": [
         {
             "id": "1",
-            "lokasi": "Simpang 4 Rejoagung - Jln. Ring Road Utara",
-            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/rejoagung3"
+            "lokasi": " Simpang 4 501 - Jln. Tirta Raya",
+            "ws_url": "wss://cctv.villabs.id/streamer-jsmpeg/streamer/501A2"
         },
         {
             "id": "2",

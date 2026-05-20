@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+             rel="stylesheet">
     <link href="/styles/main.rell.css?v=<%= Date.now() %>" rel="stylesheet">
     <script src="/js/jquery-4.0.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css" />
@@ -52,7 +52,7 @@
             <div class="cctv-grid">
                 <% streams.forEach((s, index)=> { %>
                     <div class="video-box" style=" width: 100%;" onclick="openMonitor('<%= s.id %>')">
-                        <div class="video-thumb" style="height:240px; overflow:hidden;background:#1e293b;position:relative;">
+                        <div class="video-thumb" style="height:325px; overflow:hidden;background:#1e293b;position:relative;">
                             <img src="/thumb/<%= s.id %>/latest.jpg?v=<%= Date.now() %>"
                                 style="width:100%;height:100%;object-fit:cover;"
                                 onerror="this.style.display='none'">

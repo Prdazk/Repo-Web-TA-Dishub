@@ -40,10 +40,11 @@ section.active{display:block}
 
 h2{
     font-size:22px;
+    font-weight:700;
     margin-bottom:20px;
-    border-left:5px solid var(--primary);
+    border-left:4px solid var(--primary);
     padding-left:12px;
-    font-family:'Orbitron';
+    letter-spacing:-0.3px;
 }
 
 /* ================= CCTV GRID ================= */
