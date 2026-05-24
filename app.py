@@ -263,10 +263,28 @@ def run_cctv(cctv_id, hls_url, shared_counts):
             out_hls
         ]
 
-        total_counts        = {k: 0 for k in VEHICLE_CLASSES}
+        # Load total hari ini dari DB saat startup/restart
+        def _load_today(cid):
+            today = datetime.now().strftime("%Y-%m-%d")
+            try:
+                conn = sqlite3.connect(DB_PATH)
+                cur = conn.cursor()
+                cur.execute("""
+                    SELECT COALESCE(SUM(car),0), COALESCE(SUM(motorcycle),0),
+                        COALESCE(SUM(bus),0), COALESCE(SUM(truck),0)
+                    FROM traffic_data WHERE cctv_id = ? AND date = ?
+                """, (cid, today))
+                row = cur.fetchone()
+                conn.close()
+                return {"car": row[0], "motorcycle": row[1], "bus": row[2], "truck": row[3]}
+            except:
+                return {k: 0 for k in VEHICLE_CLASSES}
+
+        total_counts        = _load_today(cctv_id)
         fallback_count      = 0
         counted_ids         = set()
-        fallback_centroids  = []   # list of (cx, cy, label, frame_id)
+        fallback_centroids  = []
+        log(cctv_id, "info", f"Resumed today totals: {total_counts}")
         FALLBACK_DIST_TH    = 50   # pixel — jarak minimum antar centroid beda kendaraan
         FALLBACK_EXPIRE     = 15   # frame — centroid lama dihapus setelah N frame
 
@@ -282,7 +300,8 @@ def run_cctv(cctv_id, hls_url, shared_counts):
 
                 id_tracker         = {}
                 interval_counts    = {k: 0 for k in VEHICLE_CLASSES}
-                fallback_centroids = []  # reset saat reconnect agar frame_id lama tidak menumpuk
+                fallback_centroids = []
+                last_count_time    = time.time()  # ← reset timer saat reconnect
 
                 while True:
                     raw = pipe_in.stdout.read(frame_size)
@@ -388,8 +407,9 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                         }
 
                         if time.time() - last_count_time >= COUNT_INTERVAL:
-                            snapshot = dict(interval_counts)  # simpan dulu sebelum reset
+                            snapshot = dict(interval_counts)
                             interval_counts = {k: 0 for k in VEHICLE_CLASSES}
+                            # Simpan juga total kumulatif ke shared_counts agar konsisten
                             last_count_time = time.time()  # hard reset untuk hindari catch-up loop
                             if any(v > 0 for v in snapshot.values()):  # jangan simpan jika semua 0
                                 update_traffic_db(cctv_id, snapshot)
@@ -408,6 +428,11 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 log(cctv_id, "error", f"STREAM ERROR: {str(e)}")
                 log(cctv_id, "error", traceback.format_exc())
                 log(cctv_id, "warning", "RECONNECTING in 3 seconds...")
+
+                # Simpan sisa interval_counts yang belum sempat disimpan ke DB
+                if any(v > 0 for v in interval_counts.values()):
+                    update_traffic_db(cctv_id, interval_counts)
+                    log(cctv_id, "warning", f"Flushed interval on disconnect: {interval_counts}")
 
                 try:
                     pipe_in.kill()

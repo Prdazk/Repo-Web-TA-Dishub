@@ -52,7 +52,7 @@
             <div class="cctv-grid">
                 <% streams.forEach((s, index)=> { %>
                     <div class="video-box" style=" width: 100%;" onclick="openMonitor('<%= s.id %>')">
-                        <div class="video-thumb" style="height:325px; overflow:hidden;background:#1e293b;position:relative;">
+                        <div class="video-thumb" style="height:320px; overflow:hidden;background:#1e293b;position:relative;">
                             <img src="/thumb/<%= s.id %>/latest.jpg?v=<%= Date.now() %>"
                                 style="width:100%;height:100%;object-fit:cover;"
                                 onerror="this.style.display='none'">
@@ -225,7 +225,7 @@
                 </div>
             </div>
 
-            <div class="table-wrapper" style="max-height: 470px; overflow-y: auto;">
+            <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
                 <table id="myTable">
                     <thead>
                         <tr>
@@ -586,7 +586,6 @@
 
                 // fallback kemarin
                 const totalKendaraanHariIni = snap.total_kendaraan ?? 0;
-                const maxJamUnik = (snap.perLokasi || []).reduce((max, row) => Math.max(max, row.jam_unik || 0), 0);
 
                 if (totalKendaraanHariIni === 0) {
                     const yesterday = new Date();
@@ -643,14 +642,21 @@
                     .sort((a, b) => b.total - a.total);
                 if (arr.length === 0) return null;
 
-                const medianIdx = Math.floor(arr.length / 2);
-                const jamMedian = arr[medianIdx]; 
+                // SESUDAH (BENAR) — rata-rata total kendaraan per jam
+                const totalSemua = arr.reduce((s, x) => s + x.total, 0);
+                const rataRata = Math.round(totalSemua / arr.length);
+
+                // cari jam yang totalnya paling mendekati rata-rata
+                const jamRata = arr.reduce((prev, curr) =>
+                    Math.abs(curr.total - rataRata) < Math.abs(prev.total - rataRata) ? curr : prev
+                );
+
                 return {
                     id,
                     tertinggi: arr[0],
                     terendah: arr[arr.length - 1],
-                    rata: { jam: jamMedian.jam, nilai: jamMedian.total }
-                };
+                    rata: { jam: jamRata.jam, nilai: rataRata }
+                }
             }).filter(Boolean);
 
             if (hasilPerLokasi.length > 0) {
