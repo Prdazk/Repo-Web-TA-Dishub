@@ -23,7 +23,8 @@ function getServerIP() {
   return results;
 }
 
-console.log("Server IP: http://" + getServerIP()[1] + ":"+ process.env.PORT);
+const ips = getServerIP();
+console.log("Server IP: http://" + (ips[0] || "localhost") + ":" + process.env.PORT);
 
 export default function createApp() {
   const app = express();

@@ -35,8 +35,8 @@ const ensureDir = (d: string) =>
 function startStream({ id, ws_url, lokasi }: StreamConfig) {
   if (!id || !ws_url) return;
 
-  const outputDir = path.join(process.cwd(), "output", id);
-  const thumbDir = path.join(process.cwd(), "public", "thumb", id);
+  const outputDir = path.join(process.cwd(), "output", `cctv_${id}`);
+  const thumbDir = path.join(process.cwd(), "public", "thumb", `cctv_${id}`);
 
   ensureDir(outputDir);
   ensureDir(thumbDir);

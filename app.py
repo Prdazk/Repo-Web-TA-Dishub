@@ -458,8 +458,9 @@ def run_flask(shared_counts):
 if __name__ == "__main__":
     logging.info("System starting...")
 
-    with open("config/videos.json") as f:
-        cctvs = json.load(f)
+    with open("config/cctv.json") as f:
+        config = json.load(f)
+        cctvs = config["streams"]
 
     create_db()
     migrate_old_ids_to_prefixed()
@@ -472,7 +473,8 @@ if __name__ == "__main__":
     processes = []
     for cam in cctvs[:MAX_PROC]:
         cam_id = normalize_cctv_id(cam["id"])
-        p = Process(target=run_cctv, args=(cam_id, cam["hls"], shared_counts))
+        hls_url = f"/hls/cctv_{cam['id']}/output.m3u8"
+        p = Process(target=run_cctv, args=(cam_id, hls_url, shared_counts))
         p.start()
         processes.append(p)
 

@@ -31,12 +31,12 @@ router.get("/monitor/:id", (req, res) => {
   
    res.render("pages/monitor", {
     title: `Monitor CCTV ${stream.lokasi}`,
-    hls: `/hls/${stream.id}/output.m3u8`,
+    hls: `/hls/cctv_${stream.id}/output.m3u8`,
     hls_o: `/hls/cctv_${stream.id}/output.m3u8`,
     stream: {
       id: stream.id,
       lokasi: stream.lokasi,
-      hls: `/hls/${stream.id}/output.m3u8`,
+      hls: `/hls/cctv_${stream.id}/output.m3u8`,
       ws_url: stream.ws_url,
       coordinate: stream.coordinate || null
     }
