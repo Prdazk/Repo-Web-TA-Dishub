@@ -473,7 +473,7 @@ if __name__ == "__main__":
     processes = []
     for cam in cctvs[:MAX_PROC]:
         cam_id = normalize_cctv_id(cam["id"])
-        hls_url = f"/hls/cctv_{cam['id']}/output.m3u8"
+        hls_url = f"http://localhost:3000/hls/cctv_{cam['id']}/output.m3u8"
         p = Process(target=run_cctv, args=(cam_id, hls_url, shared_counts))
         p.start()
         processes.append(p)
