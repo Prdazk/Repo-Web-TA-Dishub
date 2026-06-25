@@ -1172,60 +1172,95 @@
             return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
         }
 
-       async function loadRiwayat() {
-        try {
+      async function loadRiwayat() {
+    try {
         const r = await fetch(buildRiwayatUrl());
         const j = await r.json();
         const listR = document.getElementById("listRiwayat");
         const pagR = document.getElementById("paginationRiwayat");
 
-                listR.innerHTML = '';
-                pagR.innerHTML = '';
+        listR.innerHTML = '';
+        pagR.innerHTML = '';
 
-                if (!j.data || j.data.length === 0) {
-                    listR.innerHTML = '<p style="color:#6b7280;padding:20px;">Tidak ada data.</p>';
-                    return;
-                }
+        if (!j.data || j.data.length === 0) {
+            listR.innerHTML = '<p style="color:#6b7280;padding:20px;">Tidak ada data.</p>';
+            return;
+        }
 
-                let grouped = {};
-                j.data.forEach(row => {
-                    if (!grouped[row.date]) grouped[row.date] = [];
-                    grouped[row.date].push(row);
-                });
+        let grouped = {};
+        j.data.forEach(row => {
+            if (!grouped[row.date]) grouped[row.date] = [];
+            grouped[row.date].push(row);
+        });
 
-                listR.innerHTML = Object.entries(grouped)
-                    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
-                    .map(([tgl, rows]) => {
-                        const lokasiRows = rows.map(row => `
-                            <div style="
-                                display:flex;align-items:center;gap:10px;
-                                padding:12px 18px;margin-bottom:8px;
-                                background:#f9fafb;border-left:4px solid #10b981;
-                                border-radius:8px;font-size:14px;color:#374151;
-                                box-shadow:0 1px 3px rgba(0,0,0,0.07);
-                            ">
-                                <span style="font-weight:600;color:#111827;min-width:150px;">
-                                    ${formatTanggal(tgl)}
-                                </span>
-                                <span style="color:#9ca3af;">•</span>
-                                <span style="color:#374151;flex:1;"><i class="fa fa-map-marker"></i> ${row.id}</span>
-                                <span style="font-weight:700;color:#10b981;">
-                                    ${row.total.toLocaleString('id-ID')} kendaraan
-                                </span>
+        const bulanSingkat = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+        listR.innerHTML = Object.entries(grouped)
+            .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+            .map(([tgl, rows]) => {
+                const tglObj = new Date(tgl + 'T00:00:00');
+                const lokasiRows = rows.map(row => `
+                    <div style="
+                        display:flex;align-items:center;gap:0;
+                        margin-bottom:6px;border-radius:10px;
+                        overflow:hidden;
+                        box-shadow:0 2px 12px rgba(16,185,129,0.07), 0 1px 3px rgba(0,0,0,0.06);
+                        transition:transform 0.18s, box-shadow 0.18s;
+                    " onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(16,185,129,0.13), 0 2px 8px rgba(0,0,0,0.09)'"
+                       onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(16,185,129,0.07), 0 1px 3px rgba(0,0,0,0.06)'">
+
+                        <div style="
+                            background:linear-gradient(135deg,#0d9462 0%,#10b981 100%);
+                            color:#fff;padding:10px 14px;min-width:80px;text-align:center;
+                            display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;
+                        ">
+                            <div style="font-size:16px;font-weight:900;line-height:1;">${tglObj.getDate()}</div>
+                            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:2px;opacity:0.88;">
+                                ${bulanSingkat[tglObj.getMonth()]} ${tglObj.getFullYear()}
                             </div>
-                        `).join('');
-                        return lokasiRows;
-                    }).join('');
+                        </div>
 
-                const totalPage = Math.ceil((j.total || 0) / riwayatLimit) || 1;
-                renderRiwayatPagination(totalPage, pagR);
+                        <div style="
+                            background:#fff;flex:1;padding:9px 14px;
+                            display:flex;align-items:center;justify-content:space-between;gap:12px;
+                        ">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                <div style="
+                                    width:26px;height:26px;border-radius:7px;flex-shrink:0;
+                                    background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+                                    display:flex;align-items:center;justify-content:center;
+                                ">
+                                    <i class="fa fa-video-camera" style="color:#10b981;font-size:13px;"></i>
+                                </div>
+                                <div style="min-width:0;">
+                                    <div style="font-size:10px;color:#9ca3af;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">Lokasi Pantau</div>
+                                    <div style="font-size:13px;font-weight:600;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px;">${row.id}</div>
+                                </div>
+                            </div>
 
-            } catch (e) {
-            console.error(e);
-            document.getElementById("listRiwayat").innerHTML =
-                '<p style="color:#ef4444;padding:20px;"><i class="fa fa-exclamation-triangle"></i> Gagal memuat data riwayat.</p>'
-        }
-        }
+                            <div style="
+                                background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+                                border:1.5px solid #6ee7b7;
+                                border-radius:8px;padding:5px 12px;text-align:center;flex-shrink:0;
+                            ">
+                                <div style="font-size:14px;font-weight:800;color:#059669;line-height:1.1;">${row.total.toLocaleString('id-ID')}</div>
+                                <div style="font-size:10px;color:#6b7280;font-weight:500;margin-top:1px;">kendaraan</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                return lokasiRows;
+            }).join('');
+
+        const totalPage = Math.ceil((j.total || 0) / riwayatLimit) || 1;
+        renderRiwayatPagination(totalPage, pagR);
+
+    } catch (e) {
+        console.error(e);
+        document.getElementById("listRiwayat").innerHTML =
+            '<p style="color:#ef4444;padding:20px;"><i class="fa fa-exclamation-triangle"></i> Gagal memuat data riwayat.</p>';
+    }
+}
 
         function renderRiwayatPagination(totalPage, container) {
             if (totalPage <= 1) return;
@@ -1322,8 +1357,7 @@
 
         loadKendaraan();
         loadRiwayat();
-        updateArusChart();
-
+        
             if (window._autoRefreshTimer) clearInterval(window._autoRefreshTimer);
             window._autoRefreshTimer = setInterval(() => {
                 const activeTab = localStorage.getItem("activeTab") || "dashboard";

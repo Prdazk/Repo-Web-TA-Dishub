@@ -20,9 +20,9 @@ DB_PATH = "db/traffic.db"
 
 WIDTH = 640
 HEIGHT = 360
-# 1. CONF_TH = 0.35  → batas minimum keyakinan model, objek di bawah 35% diabaikan
+# CONF_TH = 0.45 → batas minimum keyakinan model, objek di bawah 45% diabaikan
 CONF_TH = 0.45
-FRAME_SKIP = 5
+FRAME_SKIP = 4
 COUNT_INTERVAL = 10
 
 # Berapa frame sebuah ID boleh "hilang" sebelum dianggap keluar
@@ -71,7 +71,6 @@ def normalize_cctv_id(raw_id) -> str:
         return s
     return "cctv_" + s
 
-
 # ========= LOAD YOLO =========
 def load_yolo():
     logging.info("Loading YOLO model...")
@@ -80,6 +79,7 @@ def load_yolo():
     logging.info("YOLO loaded successfully")
     return model
 
+# warna bounding box: mobil=biru, motor=kuning, bus=merah, truk=pink
 COLORS = {
     "car": ((255, 100, 0), (200, 70, 0)),
     "motorcycle": ((0, 200, 255), (0, 160, 200)),
@@ -87,25 +87,38 @@ COLORS = {
     "truck": ((180, 0, 255), (140, 0, 200)),
 }
 
-def draw_modern_box(frame, x1, y1, x2, y2, label, conf):
+def draw_modern_box(frame, x1, y1, x2, y2, label, conf, track_id=None):
     box_color, bg_color = COLORS.get(label, ((200, 200, 200), (120, 120, 120)))
     font = cv2.FONT_HERSHEY_SIMPLEX
     padding = 4
 
     cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
 
-    text = f"{label} {conf:.2f}"
-    (tw, th), _ = cv2.getTextSize(text, font, 0.45, 1)
+    # Baris 1: label + confidence
+    text_main = f"{label} {conf:.2f}"
+    (tw1, th1), _ = cv2.getTextSize(text_main, font, 0.45, 1)
 
-    bg_y1 = y1 - th - padding * 2
+    # Baris 2: track_id
+    text_id = f"id={track_id}" if track_id is not None else "id=?"
+    (tw2, th2), _ = cv2.getTextSize(text_id, font, 0.38, 1)
+
+    box_w    = max(tw1, tw2) + padding * 2
+    total_h  = th1 + th2 + padding * 3
+
+    bg_y1 = y1 - total_h
     bg_y2 = y1
 
     if bg_y1 < 0:
         bg_y1 = y1
-        bg_y2 = y1 + th + padding * 2
+        bg_y2 = y1 + total_h
 
-    cv2.rectangle(frame, (x1, bg_y1), (x1 + tw + padding * 2, bg_y2), bg_color, -1)
-    cv2.putText(frame, text, (x1 + padding, bg_y2 - padding), font, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.rectangle(frame, (x1, bg_y1), (x1 + box_w, bg_y2), bg_color, -1)
+    cv2.putText(frame, text_main,
+                (x1 + padding, bg_y1 + th1 + padding),
+                font, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, text_id,
+                (x1 + padding, bg_y1 + th1 + th2 + padding * 2),
+                font, 0.38, (200, 230, 255), 1, cv2.LINE_AA)
 
 def create_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -224,42 +237,51 @@ def run_cctv(cctv_id, hls_url, shared_counts):
         log(cctv_id, "info", "Starting CCTV process")
         model = load_yolo()
 
-        out_dir = f"output/{cctv_id}"
+        out_dir = f"output/{cctv_id}_det"
         os.makedirs(out_dir, exist_ok=True)
         out_hls = os.path.join(out_dir, "output.m3u8")
 
         frame_size = WIDTH * HEIGHT * 3
-        last_count_time = time.time()
 
         ffmpeg_in = [
-            "ffmpeg", "-threads", "1",
+            "ffmpeg", "-threads", "2",
             "-loglevel", "error",
-            "-fflags", "nobuffer",
+            "-fflags", "nobuffer+discardcorrupt",
             "-flags", "low_delay",
+            "-analyzeduration", "100000",
+            "-probesize", "100000",
             "-i", hls_url,
             "-vf", f"scale={WIDTH}:{HEIGHT}",
             "-pix_fmt", "bgr24",
+            "-vsync", "drop",
             "-f", "rawvideo", "-"
         ]
 
         ffmpeg_out = [
             "ffmpeg", "-y",
             "-loglevel", "error",
+            "-fflags", "nobuffer",
             "-f", "rawvideo",
             "-pix_fmt", "bgr24",
             "-s", f"{WIDTH}x{HEIGHT}",
-            "-r", "12",
+            "-r", "8",
             "-i", "-",
             "-c:v", "libx264",
             "-preset", "ultrafast",
             "-tune", "zerolatency",
-            "-g", "24",
+            "-profile:v", "baseline",
+            "-pix_fmt", "yuv420p",
+            "-g", "8",
             "-sc_threshold", "0",
+            "-bufsize", "256k",
+            "-maxrate", "600k",
             "-f", "hls",
-            "-hls_time", "2",
-            "-hls_list_size", "10",
-            "-hls_flags", "independent_segments",
-            "-hls_delete_threshold", "10",
+            "-hls_time", "1",
+            "-hls_list_size", "3",
+            "-hls_flags", "independent_segments+delete_segments+omit_endlist",
+            "-hls_delete_threshold", "1",
+            "-hls_allow_cache", "0",
+            "-hls_segment_filename", os.path.join(out_dir, "seg_%03d.ts"),
             out_hls
         ]
 
@@ -288,12 +310,22 @@ def run_cctv(cctv_id, hls_url, shared_counts):
         FALLBACK_DIST_TH    = 50   # pixel — jarak minimum antar centroid beda kendaraan
         FALLBACK_EXPIRE     = 15   # frame — centroid lama dihapus setelah N frame
 
+        pipe_out = subprocess.Popen(ffmpeg_out, stdin=subprocess.PIPE)
+
+        # ── RECONNECT COUNTER ──
+        session_id = 0
+
+        # ── SAFETY INIT ────────────────────────────────────────────
+        # Inisialisasi di sini agar blok except tidak NameError
+        # jika exception terjadi sebelum loop dalam sempat jalan
+        interval_counts = {k: 0 for k in VEHICLE_CLASSES}
+        # ───────────────────────────────────────────────────────────
+
         while True:
             try:
                 log(cctv_id, "info", "CONNECTING to stream...")
                 pipe_in = subprocess.Popen(ffmpeg_in, stdout=subprocess.PIPE)
-                pipe_out = subprocess.Popen(ffmpeg_out, stdin=subprocess.PIPE)
-                log(cctv_id, "info", "CONNECTED")
+                log(cctv_id, "info", f"CONNECTED (session={session_id})")
 
                 frame_id = 0
                 last_boxes = []
@@ -301,7 +333,7 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 id_tracker         = {}
                 interval_counts    = {k: 0 for k in VEHICLE_CLASSES}
                 fallback_centroids = []
-                last_count_time    = time.time()  # ← reset timer saat reconnect
+                last_count_time    = time.time()
 
                 while True:
                     raw = pipe_in.stdout.read(frame_size)
@@ -312,12 +344,14 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                     frame_id += 1
 
                     if frame_id % FRAME_SKIP == 0:
+                        # conf < 0.45 langsung dibuang sebelum dapat ID
                         results = model.track(
                             frame,
                             imgsz=640,
                             conf=CONF_TH,
                             device="cpu",
                             persist=True,
+                            tracker="bytetrack.yaml",  # algoritma tracking, sumber pemberi ID per kendaraan
                             verbose=False
                         )[0]
 
@@ -331,10 +365,15 @@ def run_cctv(cctv_id, hls_url, shared_counts):
 
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             conf = float(box.conf[0])
-                            last_boxes.append((x1, y1, x2, y2, label, conf))
+                            tid = int(box.id[0]) if box.id is not None else None
+                            last_boxes.append((x1, y1, x2, y2, label, conf, tid))
 
                             if box.id is not None:
                                 track_id = int(box.id[0])
+
+                                # tiap kendaraan dapat ID unik dari ByteTrack
+                                # digabung session agar tidak bentrok saat reconnect
+                                unique_key = (session_id, track_id)
 
                                 # Update kapan terakhir ID ini muncul di frame
                                 id_tracker[track_id] = {
@@ -342,12 +381,14 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                     "last_frame": frame_id
                                 }
 
-                                if track_id not in counted_ids:
-                                    counted_ids.add(track_id)
+                                # ID sudah ada = skip, belum ada = hitung 1x
+                                # walau bounding box bergerak tiap frame, ID tetap sama
+                                if unique_key not in counted_ids:
+                                    counted_ids.add(unique_key)
                                     interval_counts[label] += 1
                                     total_counts[label]    += 1
                                     log(cctv_id, "info",
-                                        f"NEW vehicle id={track_id} label={label} "
+                                        f"NEW vehicle session={session_id} id={track_id} label={label} "
                                         f"conf={conf:.2f} total={sum(total_counts.values())}")
                             else:
                                 cx = (x1 + x2) // 2
@@ -387,14 +428,15 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                             del id_tracker[tid]
 
                         if len(counted_ids) > 10000:
-                            active_ids   = set(id_tracker.keys())
-                            safe_to_trim = counted_ids - active_ids
+                            # active_keys = semua (session_id, track_id) yang masih aktif di frame ini
+                            active_keys  = {(session_id, tid) for tid in id_tracker.keys()}
+                            safe_to_trim = counted_ids - active_keys
                             trim_count   = max(0, len(counted_ids) - 8000)
                             if trim_count > 0 and safe_to_trim:
                                 to_remove = set(list(safe_to_trim)[:trim_count])
                                 counted_ids -= to_remove
                                 log(cctv_id, "warning",
-                                    f"counted_ids trimmed {trim_count} inactive IDs → sisa {len(counted_ids)}")
+                                    f"counted_ids trimmed {trim_count} inactive keys → sisa {len(counted_ids)}")
 
                         shared_counts[cctv_id] = {
                             "car":           total_counts["car"],
@@ -409,16 +451,14 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                         if time.time() - last_count_time >= COUNT_INTERVAL:
                             snapshot = dict(interval_counts)
                             interval_counts = {k: 0 for k in VEHICLE_CLASSES}
-                            # Simpan juga total kumulatif ke shared_counts agar konsisten
-                            last_count_time = time.time()  # hard reset untuk hindari catch-up loop
                             if any(v > 0 for v in snapshot.values()):  # jangan simpan jika semua 0
                                 update_traffic_db(cctv_id, snapshot)
                                 log(cctv_id, "info",
                                     f"DB saved interval={snapshot} "
                                     f"total={total_counts} fallback={fallback_count}")
 
-                    for x1, y1, x2, y2, label, conf in last_boxes:
-                        draw_modern_box(frame, x1, y1, x2, y2, label, conf)
+                    for x1, y1, x2, y2, label, conf, tid in last_boxes:
+                        draw_modern_box(frame, x1, y1, x2, y2, label, conf, tid)
 
                     if pipe_out.stdin and not pipe_out.stdin.closed:
                         pipe_out.stdin.write(frame.tobytes())
@@ -436,12 +476,20 @@ def run_cctv(cctv_id, hls_url, shared_counts):
 
                 try:
                     pipe_in.kill()
-                    pipe_out.kill()
-                    pipe_in.wait()   # tunggu sampai benar-benar mati
-                    pipe_out.wait()  # sebelum spawn FFmpeg baru
-                except Exception:
-                    pass
+                    pipe_in.wait()
+                except (NameError, Exception):
+                    pass  # pipe_in belum terdefinisi atau sudah mati
 
+                # ── NAIKKAN SESSION ID ─────────────────────────────────────
+                # ByteTrack akan reset ID dari 1 lagi setelah reconnect.
+                # Dengan menaikkan session_id, semua ID lama otomatis
+                # berbeda namespace → tidak ada collision, tidak ada miss count
+                session_id += 1
+                log(cctv_id, "info", f"Session naik → session_id={session_id}")
+                # ──────────────────────────────────────────────────────────
+
+                # ✅ pipe_out JANGAN di-kill saat reconnect input
+                # biarkan tetap hidup supaya segment counter tidak reset
                 time.sleep(3)
 
     except Exception as e:

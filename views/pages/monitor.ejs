@@ -279,42 +279,35 @@
       }
 
       function startStallWatcher() {
-  clearInterval(stallTimer);
-  let frozenCount = 0;   
-  let freezeCount = 0;   
+    clearInterval(stallTimer);
+    let frozenCount = 0;
+    let freezeCount = 0;
 
-  stallTimer = setInterval(() => {
-    if (video.paused || video.ended) return;
+    stallTimer = setInterval(() => {
+      if (video.paused || video.ended) return;
 
-    if (video.readyState < 3) {
-      frozenCount++;
-      console.warn(`[HLS] Buffer rendah (readyState=${video.readyState}) count=${frozenCount}`);
-      if (frozenCount >= 5) {
-        console.warn("[HLS] Buffer kosong terlalu lama, reconnect...");
-        frozenCount = 0;
-        retryCount = 0;
-        init();
+      if (video.readyState < 3) {
+        frozenCount++;
+        if (frozenCount >= 5) {
+          frozenCount = 0;
+          retryCount = 0;
+          init();
+        }
+        return;
       }
-      return;
-    }
 
-    // Reset counter kalau normal
-    frozenCount = 0;
+      frozenCount = 0;
 
-      // Auto sync ke live edge
       if (hls && hls.liveSyncPosition) {
         const diff = hls.liveSyncPosition - video.currentTime;
-        if (diff > 3) {
-          console.warn("[HLS] Terlalu jauh dari live, sync...");
+        if (diff > 2) {
           try { video.currentTime = hls.liveSyncPosition; } catch(e) {}
         }
       }
 
-      // Kalau currentTime benar-benar freeze
-      if (video.currentTime === lastTime) {
+      if (video.currentTime === lastTime && lastTime !== -1) {
         freezeCount++;
-        console.warn(`[HLS] Freeze terdeteksi count=${freezeCount}`);
-        if (freezeCount >= 5) {
+        if (freezeCount >= 3) {
           freezeCount = 0;
           retryCount = 0;
           init();
@@ -323,8 +316,8 @@
         freezeCount = 0;
         lastTime = video.currentTime;
       }
-      }, 2000);
-    }
+    }, 1000);
+  }
 
         function init() {
       if (isDestroyed) return;
@@ -345,21 +338,22 @@
         }
 
         hls = new Hls({
-        lowLatencyMode: true,
-        liveSyncDurationCount: 2,
-        liveMaxLatencyDurationCount: 5,
-        maxBufferLength: 8,
-        maxMaxBufferLength: 16,
-        maxBufferHole: 0.5,
-        manifestLoadingMaxRetry: 10,
-        manifestLoadingRetryDelay: 500,
-        levelLoadingMaxRetry: 10,
-        levelLoadingRetryDelay: 500,
-        fragLoadingMaxRetry: 10,
-        fragLoadingRetryDelay: 500,
-        enableWorker: true,
-        startFragPrefetch: true,
-      });
+          lowLatencyMode: true,
+          liveSyncDurationCount: 1,
+          liveMaxLatencyDurationCount: 3,
+          maxBufferLength: 3,
+          maxMaxBufferLength: 6,
+          maxBufferHole: 0.3,
+          backBufferLength: 3,
+          manifestLoadingMaxRetry: 10,
+          manifestLoadingRetryDelay: 300,
+          levelLoadingMaxRetry: 10,
+          levelLoadingRetryDelay: 300,
+          fragLoadingMaxRetry: 10,
+          fragLoadingRetryDelay: 300,
+          enableWorker: true,
+          startFragPrefetch: true,
+        });
 
         hls.loadSource(url);
         hls.attachMedia(video);
@@ -375,35 +369,45 @@
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
-        console.warn("[HLS] Error:", data.type, data.details, data.fatal);
+        if (data.fatal) console.warn("[HLS] Error:", data.type, data.details, data.fatal);
 
         if (!data.fatal) {
-          // Buffer stall — sync ke live dulu
-          if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
-            console.warn("[HLS] Buffer stall, coba sync ke live...");
-            try {
-              if (hls.liveSyncPosition) {
-                video.currentTime = hls.liveSyncPosition;
-              }
-            } catch(e) {}
-
-            // Kalau 2 detik masih stuck, reconnect
+          // Segment not found — tunggu sebentar lalu retry, JANGAN reconnect
+          if (
+            data.details === Hls.ErrorDetails.FRAG_LOAD_ERROR ||
+            data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT
+          ) {
+            console.warn("[HLS] Segment gagal load, tunggu 1s...");
             setTimeout(() => {
-              if (video.readyState < 3) {
-                console.warn("[HLS] Masih stuck setelah sync, reconnect...");
-                retryCount = 0;
-                init();
-              }
-            }, 5000);
+              if (hls) hls.startLoad();
+            }, 1000);
+            return;
+          }
+
+          if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+            try { if (hls) hls.startLoad(); } catch(e) {}
+            return;
+          }
+
+          // Manifest/level not found — stream belum siap, polling
+          if (
+            data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+            data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT ||
+            data.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR
+          ) {
+            console.warn("[HLS] Manifest belum siap, retry 2s...");
+            setTimeout(() => {
+              if (hls) hls.loadSource(url);
+            }, 2000);
             return;
           }
 
           return;
         }
 
-        // Fatal error
+        // Fatal error — exponential backoff tapi max 5 detik saja
         retryCount++;
-        const delay = Math.min(2000 * Math.pow(2, retryCount - 1), 30000);
+        const delay = Math.min(1000 * retryCount, 5000);
         showOverlay(`Reconnecting... (#${retryCount})`);
         setTimeout(init, delay);
       });

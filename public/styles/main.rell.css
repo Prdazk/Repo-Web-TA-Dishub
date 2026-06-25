@@ -50,7 +50,7 @@ h2{
 /* ================= CCTV GRID ================= */
 .cctv-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(450px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(min(450px, 100%),1fr));
     gap:24px;
 }
 
@@ -330,6 +330,26 @@ footer {
     z-index:999;
 }
 
+/* TABLET MODE */
+@media(max-width:1024px){
+    .sidebar{
+        width:220px;
+    }
+
+    .main-wrapper{
+        margin-left:220px;
+        padding:20px;
+    }
+
+    .summary-small{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .cctv-grid{
+        grid-template-columns:1fr;
+    }
+}
+
 /* MOBILE MODE */
 @media(max-width:768px){
     .sidebar{
@@ -373,6 +393,36 @@ footer {
 
     th,td{
         padding:8px;
+    }
+
+    .video-thumb{
+        height:200px !important;
+    }
+
+    .card h3{
+        font-size:24px;
+    }
+
+    .action-bar{
+        flex-direction:column;
+        align-items:stretch;
+        gap:12px;
+    }
+
+    .export-group{
+        flex-direction:column;
+    }
+
+    .export-group button,
+    .btn-filter,
+    .btn-reset{
+        width:100%;
+        justify-content:center;
+    }
+
+    .filter-group{
+        flex-direction:column;
+        align-items:stretch;
     }
 }
 

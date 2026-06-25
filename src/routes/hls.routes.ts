@@ -29,8 +29,19 @@ router.get("/{*id}", async (req: any, res: any, next: any) => {
   const raw = req.params.id;
   const file = Array.isArray(raw) ? raw.join("/") : String(raw);
 
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Accept-Ranges", "bytes");
+  if (file.endsWith(".m3u8")) {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  } else {
+    res.setHeader("Cache-Control", "no-cache");
+  }
+  // M3U8 tidak boleh pakai Range request
+  if (file.endsWith(".m3u8")) {
+    res.setHeader("Accept-Ranges", "none");
+  } else {
+    res.setHeader("Accept-Ranges", "bytes");
+  }
 
   // Security
   if (file.includes("..")) {
@@ -52,7 +63,7 @@ router.get("/{*id}", async (req: any, res: any, next: any) => {
 
   if (!found) {
     // 404 lebih tepat dari 500 (file memang tidak ada, bukan server crash)
-    console.warn(`[HLS] File not found: ${file}`);
+    // silent 404 — segment .ts sudah dihapus ffmpeg, normal
     return res.status(404).end();
   }
 

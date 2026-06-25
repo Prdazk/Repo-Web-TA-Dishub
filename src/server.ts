@@ -63,8 +63,8 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
       "-fflags", "nobuffer+discardcorrupt",
       "-flags", "low_delay",
-      "-analyzeduration", "500000",
-      "-probesize", "500000",
+      "-analyzeduration", "100000",
+      "-probesize", "100000",
       "-err_detect", "ignore_err",
       "-f", "mpegts",
       "-i", "pipe:0",
@@ -82,15 +82,16 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
       "-tune", "zerolatency",
       "-profile:v", "baseline",
       "-pix_fmt", "yuv420p",
-      "-x264opts", "keyint=10:min-keyint=10:no-scenecut",
+      "-x264opts", `keyint=${STREAM_FPS}:min-keyint=${STREAM_FPS}:no-scenecut`,
       "-bf", "0",
 
       // HLS
       "-f", "hls",
-      "-hls_time", "0.5",
-      "-hls_list_size", "5",
-      "-hls_flags", "delete_segments+independent_segments",
+      "-hls_time", "1",
+      "-hls_list_size", "3",
+      "-hls_flags", "delete_segments+independent_segments+omit_endlist",
       "-hls_allow_cache", "0",
+      "-hls_delete_threshold", "1",
       "-hls_segment_filename",
       path.join(outputDir, "seg_%03d.ts").replace(/\\/g, "/"),
       playlist
@@ -98,7 +99,11 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
     ffmpeg.stderr.on("data", (data) => {
       const msg = data.toString().trim();
-      if (!msg.includes("Invalid frame dimensions")) {
+      if (
+        !msg.includes("Invalid frame dimensions") &&
+        !msg.includes("File not found") &&
+        !msg.includes("No such file")
+      ) {
         console.warn(`[FFmpeg ${id}] ${msg}`);
       }
     });

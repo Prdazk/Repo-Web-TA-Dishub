@@ -31,6 +31,14 @@ export default function createApp() {
 
   app.set("view engine", "ejs");
 
+  // FIX: No-cache untuk semua file HLS agar tidak ada delay dari cache
+  app.use("/hls", (req, res, next) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+  });
+
   app.use(hlsMime);
   app.use(express.static("public", { maxAge: 0, index: false }));
   app.use("/", pagesRouter);

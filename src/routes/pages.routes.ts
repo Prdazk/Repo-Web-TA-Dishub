@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
   const streams = data.streams.map((s: any) => ({
     id: s.id,
     lokasi: s.lokasi,
-    hls: `/hls/${s.id}/output.m3u8`,
+    hls: `/hls/cctv_${s.id}/output.m3u8`,
     ws_url: s.ws_url,
     coordinate: s.coordinate || null,
   }));
@@ -27,12 +27,13 @@ router.get("/monitor/:id", (req, res) => {
   const jsonPath = path.join(process.cwd(), "config", "cctv.json");
   try {
   const data = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-  const stream = data.streams.find((s: any) => s.id === id);
+  const stream = data.streams.find((s: any) => String(s.id) === String(id));
+  if (!stream) return res.status(404).send("CCTV tidak ditemukan");
   
    res.render("pages/monitor", {
     title: `Monitor CCTV ${stream.lokasi}`,
     hls: `/hls/cctv_${stream.id}/output.m3u8`,
-    hls_o: `/hls/cctv_${stream.id}/output.m3u8`,
+    hls_o: `/hls/cctv_${stream.id}_det/output.m3u8`,
     stream: {
       id: stream.id,
       lokasi: stream.lokasi,
