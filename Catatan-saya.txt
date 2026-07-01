@@ -1,0 +1,140 @@
+===========================================
+CATATAN RINGKAS — SISTEM CCTV DETEKSI KENDARAAN
+===========================================
+
+ALUR SISTEM
+-----------
+Kamera CCTV
+  -> Node.js (server.ts) ubah stream jadi HLS
+  -> Python (app.py) ambil HLS itu, deteksi pakai AI (YOLOv8 + ByteTrack)
+  -> Hasil hitungan disimpan ke database (SQLite) & disiarkan via Flask (port 6327)
+  -> Node.js (api.routes.ts) ambil data itu
+  -> Ditampilkan di web (cctv.ejs = daftar kamera, monitor.ejs = nonton 1 kamera,
+     cc.ejs = dashboard & laporan)
+
+Ada 2 versi stream: yang asli (tanpa kotak) dan yang sudah diproses AI
+(ada bounding box) — yang ditampilkan ke user adalah versi yang sudah ada
+bounding box-nya.
+
+
+1. TAU MOBIL/MOTOR/BUS/TRUK DARI MANA?
+---------------------------------------
+Pakai model AI siap pakai (YOLOv8n), sudah dilatih sebelumnya pakai
+jutaan foto oleh orang lain (dataset COCO). Sistem cuma ambil 4 kelas
+itu saja dari 80 kelas yang dikenali model (sisanya diabaikan).
+
+
+2. DETEKSI TIAP APA?
+---------------------------------------
+Tidak setiap frame. Cuma 1 dari setiap 4 frame yang diproses AI
+(FRAME_SKIP=4), supaya tidak berat. Frame lainnya cuma menampilkan
+kotak deteksi terakhir.
+
+
+3. SEBERAPA AKURAT?
+---------------------------------------
+Modelnya versi paling ringan (yolov8n) — diutamakan cepat, bukan
+paling akurat. Cocok untuk lihat tren (ramai/sepi/jam sibuk), bukan
+penghitung presisi 100% seperti sensor fisik di jalan.
+
+
+4. KOTAK & CONFIDENCE BERUBAH-UBAH, KENAPA TIDAK DOUBLE COUNTING?
+---------------------------------------
+Yang dihitung BUKAN posisi kotak atau confidence-nya, tapi ID UNIK
+(track_id) dari algoritma ByteTrack. Satu kendaraan dikasih 1 ID yang
+nempel terus selama dia kelihatan di layar. Sistem cuma +1 SAAT ID itu
+pertama kali muncul; setelah itu walau kotak geser-geser/confidence
+naik-turun, ID yang sama tidak dihitung lagi.
+
+Tambahan pengaman:
+- Kalau kamera sempat putus & reconnect, ID lama tidak akan dianggap
+  numpuk dengan ID baru (pakai penanda sesi/session_id).
+- Kalau AI gagal kasih ID, ada cadangan: cek jarak titik tengah kotak,
+  kalau terlalu dekat dengan deteksi sebelumnya dianggap kendaraan
+  yang sama (tidak dihitung ulang).
+
+
+5-6. CARA CEK LIBRARY & FILE bytetrack.yaml
+---------------------------------------
+File "bytetrack.yaml" BUKAN file yang perlu kamu buat sendiri — itu
+sudah otomatis ada di dalam library "ultralytics" yang kamu install.
+
+Cek di terminal VS Code:
+
+  pip list                     -> lihat semua library terpasang
+  pip show ultralytics         -> lihat info & lokasi install ultralytics
+
+  python -c "import ultralytics, os; print(os.listdir(os.path.join(os.path.dirname(ultralytics.__file__),'cfg','trackers')))"
+
+Kalau hasilnya muncul ['bytetrack.yaml', 'botsort.yaml'] -> aman, file
+memang ada.
+
+Kalau error atau filenya tidak ada -> install ulang:
+  pip uninstall ultralytics -y
+  pip install ultralytics --upgrade
+
+Kalau mau custom isi file-nya, baru perlu copy file itu ke folder
+project kamu lalu ubah baris di app.py:
+  tracker="config/bytetrack.yaml"   (pakai path file kamu sendiri)
+
+
+RINGKASAN FILE
+---------------------------------------
+app.py          -> otak AI: deteksi, hitung, simpan ke DB, siarkan angka
+server.ts       -> ambil stream kamera, ubah jadi HLS
+app.ts          -> setup server Express (routing utama)
+pages.routes.ts -> routing halaman (daftar CCTV & monitor per kamera)
+hls.routes.ts   -> menyajikan file video HLS
+api.routes.ts   -> semua endpoint data (counts, list, dashboard, dll)
+monitor.ejs     -> halaman nonton 1 kamera + panel angka realtime
+cctv.ejs        -> halaman daftar/galeri semua kamera
+cc.ejs          -> dashboard: total kendaraan, grafik, export Excel/PDF
+
+===========================================
+
+
+
+==================================================
+PERTANYAAN DOSEN & JAWABAN
+(Topik: Apakah mobil parkir dihitung berulang kali?)
+==================================================
+
+PERTANYAAN:
+
+1. Apakah mobil yang parkir/diam akan dihitung berulang kali setiap 
+   frame selama dia tetap diam di situ?
+
+2. Kalau begitu, kapan mobil yang sama bisa kehitung dua kali?
+
+3. Apakah ini berarti sistemnya tidak akurat?
+
+
+==================================================
+JAWABAN:
+==================================================
+
+1. Tidak. Mobil yang diam tidak akan dihitung berulang kali selama 
+   ID-nya tetap sama. Analoginya seperti petugas yang menempelkan 
+   stiker nomor ke setiap mobil baru yang masuk. Begitu mobil dapat 
+   stiker (ID), petugas itu catat di buku "stiker ini sudah dicatat". 
+   Jadi walaupun mobil itu terlihat lagi di frame berikutnya, 
+   petugas cek dulu ke buku catatan, lihat sudah ada, jadi tidak 
+   dicatat ulang.
+
+2. Mobil bisa kehitung dua kali kalau dia "kehilangan stiker"-nya, 
+   lalu dapat stiker baru. Ini bisa terjadi karena dua hal:
+   - Mobil tertutup sebentar oleh objek lain (oklusi) atau 
+     pencahayaan berubah, sehingga sistem sempat "lupa" itu mobil 
+     yang sama, lalu kasih stiker baru saat terlihat lagi.
+   - Koneksi CCTV sempat putus-nyambung (reconnect). Saat reconnect, 
+     sistem mulai dari "buku catatan baru" supaya stiker lama dan 
+     baru tidak bentrok, jadi mobil yang kebetulan masih diam saat 
+     itu bisa dapat stiker baru lagi.
+
+3. Tidak berarti tidak akurat, ini wajar untuk sistem traffic 
+   counting real-time. Tujuannya menghitung volume kendaraan yang 
+   lewat, bukan mengawasi satu mobil terus-menerus seperti CCTV 
+   keamanan. Selama gangguan (oklusi/reconnect) tidak sering terjadi, 
+   hasil hitungannya tetap dapat diandalkan untuk estimasi jumlah 
+   kendaraan per jam. Selain itu, semua kejadian sudah tercatat di 
+   log sistem, jadi bisa ditelusuri kalau ada anomali.

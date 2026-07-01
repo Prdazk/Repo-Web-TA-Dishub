@@ -19,6 +19,8 @@
     <script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -903,6 +905,34 @@
             loadKendaraan();
         }
 
+        function showDownloadToast(namaFile) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position:fixed;bottom:24px;right:24px;z-index:100000;
+            background:#1e3a5f;color:#fff;padding:14px 20px;border-radius:10px;
+            box-shadow:0 8px 24px rgba(0,0,0,0.25);font-size:13px;
+            display:flex;align-items:center;gap:10px;
+            opacity:0;transform:translateY(10px);transition:opacity 0.25s, transform 0.25s;
+        `;
+        toast.innerHTML = `
+            <i class="fa fa-check-circle" style="color:#10b981;font-size:18px;"></i>
+            <div>
+                <div style="font-weight:600;">Download berhasil</div>
+                <div style="color:#9ca3af;font-size:11px;margin-top:2px;">${namaFile}</div>
+            </div>
+        `;
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            });
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         function exportPDF() {
         const _n = new Date();
         const today = `${_n.getFullYear()}-${String(_n.getMonth()+1).padStart(2,'0')}-${String(_n.getDate()).padStart(2,'0')}`;
@@ -915,110 +945,75 @@
         }
 
         async function doExportPDF() {
-        const tglInput = document.getElementById("pdfTanggal").value;
-        if (!tglInput) {
-            alert("Pilih tanggal terlebih dahulu!");
-            return;
-        }
+            const tglInput = document.getElementById("pdfTanggal").value;
+            if (!tglInput) {
+                alert("Pilih tanggal terlebih dahulu!");
+                return;
+            }
 
-        closePDFModal();
+            closePDFModal();
 
-        const win = window.open("", "", "width=1000,height=700");
-        if (!win) {
-            alert("Popup diblokir browser. Izinkan popup untuk halaman ini.");
-            return;
-        }
+            const params = new URLSearchParams();
+            params.set("ids", cctv);
+            params.set("page", "1");
+            params.set("limit", "1000");
+            params.set("startDate", tglInput);
+            params.set("endDate", tglInput);
 
-        const params = new URLSearchParams();
-        params.set("ids", cctv);
-        params.set("page", "1");
-        params.set("limit", "1000");
-        params.set("startDate", tglInput);
-        params.set("endDate", tglInput);
+            const r = await fetch(`/api/db/list?${params.toString()}`);
+            const j = await r.json();
 
-        const r = await fetch(`/api/db/list?${params.toString()}`);
-        const j = await r.json();
+            if (!j.data || j.data.length === 0) {
+                showModalTidakAdaData(tglInput);
+                return;
+            }
 
-        if (!j.data || j.data.length === 0) {
-         win.close();
-        showModalTidakAdaData(tglInput);
-        return;
-        }
+            const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
+                        "Juli","Agustus","September","Oktober","November","Desember"];
+            const tglObj = new Date(tglInput + 'T00:00:00');
+            const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
 
-        const bulan = ["Januari","Februari","Maret","April","Mei","Juni",
-                    "Juli","Agustus","September","Oktober","November","Desember"];
-        const tglObj = new Date(tglInput + 'T00:00:00');
-        const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+            let totalKeseluruhan = 0;
+            const bodyRows = j.data.map(d => {
+                const total = d.motorcycle + d.car + d.bus + d.truck;
+                totalKeseluruhan += total;
+                return [d.id, d.date, d.hour + ":00", d.motorcycle, d.car, d.bus, d.truck, total];
+            });
+            bodyRows.push(["TOTAL KESELURUHAN", "", "", "", "", "", "", totalKeseluruhan.toLocaleString('id-ID')]);
 
-        let totalKeseluruhan = 0;
-        const rows = j.data.map(d => {
-            const total = d.motorcycle + d.car + d.bus + d.truck;
-            totalKeseluruhan += total;
-            return `<tr>
-                <td>${d.id}</td>
-                <td>${d.date}</td>
-                <td>${d.hour}:00</td>
-                <td>${d.motorcycle}</td>
-                <td>${d.car}</td>
-                <td>${d.bus}</td>
-                <td>${d.truck}</td>
-                <td><strong>${total}</strong></td>
-            </tr>`;
-        }).join('');
-            win.document.write(`
-                <html>
-                <head>
-                    <title>Data Kendaraan - ${tglFormatted}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
-                        .header { border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
-                        h2 { margin:0; color:#1e3a5f; font-size:20px; }
-                        .meta { display:flex; gap:24px; margin-top:8px; font-size:13px; color:#6b7280; }
-                        .meta span strong { color:#1f2937; }
-                        table { width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; }
-                        th { background:#2563eb; color:#fff; padding:10px 8px; text-align:center; }
-                        td { border:1px solid #e5e7eb; padding:8px; text-align:center; }
-                        tr:nth-child(even) td { background:#f9fafb; }
-                        .footer { margin-top:16px; font-size:11px; color:#9ca3af; text-align:right; }
-                        .total-row td { background:#eff6ff; font-weight:bold; color:#1e3a5f; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h2>Laporan Data Kendaraan</h2>
-                        <div class="meta">
-                            <span>Tanggal: <strong>${tglFormatted}</strong></span>
-                            <span>Total Baris: <strong>${j.data.length}</strong></span>
-                            <span>Total Kendaraan: <strong>${totalKeseluruhan.toLocaleString('id-ID')}</strong></span>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>CCTV</th>
-                                <th>Tanggal</th>
-                                <th>Jam</th>
-                                <th>Motor</th>
-                                <th>Mobil</th>
-                                <th>Bus</th>
-                                <th>Truk</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                            <tr class="total-row">
-                                <td colspan="7">TOTAL KESELURUHAN</td>
-                                <td>${totalKeseluruhan.toLocaleString('id-ID')}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="footer">Dicetak pada: ${new Date().toLocaleString('id-ID')}</div>
-                </body>
-                </html>
-            `);
-            win.document.close();
-            win.print();
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: "landscape" });
+
+            doc.setFontSize(16);
+            doc.setTextColor(30, 58, 95);
+            doc.text("Laporan Data Kendaraan", 14, 16);
+
+            doc.setFontSize(10);
+            doc.setTextColor(107, 114, 128);
+            doc.text(
+                `Tanggal: ${tglFormatted}   |   Total Baris: ${j.data.length}   |   Total Kendaraan: ${totalKeseluruhan.toLocaleString('id-ID')}`,
+                14, 23
+            );
+
+            doc.autoTable({
+                startY: 28,
+                head: [["CCTV", "Tanggal", "Jam", "Motor", "Mobil", "Bus", "Truk", "Total"]],
+                body: bodyRows,
+                headStyles: { fillColor: [37, 99, 235], textColor: 255, halign: 'center' },
+                bodyStyles: { halign: 'center' },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+                didParseCell: (data) => {
+                    if (data.row.index === bodyRows.length - 1) {
+                        data.cell.styles.fillColor = [239, 246, 255];
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = [30, 58, 95];
+                    }
+                }
+            });
+
+            const namaFilePdf = `Data_Kendaraan_${tglFormatted}.pdf`;
+            doc.save(namaFilePdf);
+            showDownloadToast(namaFilePdf);
         }
 
         function exportExcel() {
@@ -1076,7 +1071,9 @@
             const tglFormatted = `${tglObj.getDate()} ${bulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
 
             XLSX.utils.book_append_sheet(wb, ws, "Data Kendaraan");
-            XLSX.writeFile(wb, `Data_Kendaraan_${tglFormatted}.xlsx`);
+            const namaFileExcel = `Data_Kendaraan_${tglFormatted}.xlsx`;
+            XLSX.writeFile(wb, namaFileExcel);
+            showDownloadToast(namaFileExcel);
         }
 
         let riwayatPage = 1;

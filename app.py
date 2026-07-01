@@ -25,10 +25,13 @@ CONF_TH = 0.45
 FRAME_SKIP = 4
 COUNT_INTERVAL = 10
 
-# Berapa frame sebuah ID boleh "hilang" sebelum dianggap keluar
 ID_EXPIRE_FRAMES = 15
 MAX_PROC = 2
 
+# Berapa kali track_id baru harus muncul berturut-turut sebelum
+# resmi dihitung sebagai kendaraan baru. Ini meredam kasus ID-swap
+# akibat oklusi yang biasanya cuma bikin ID "hantu" muncul 1-2 frame lalu hilang.
+CONFIRM_FRAMES = 2
 VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
 
 USE_PREFIX_CCTV = True
@@ -305,10 +308,13 @@ def run_cctv(cctv_id, hls_url, shared_counts):
         total_counts        = _load_today(cctv_id)
         fallback_count      = 0
         counted_ids         = set()
-        fallback_centroids  = []
+        # Dedup buffer GABUNGAN: dipakai baik oleh jalur ID (ByteTrack) maupun fallback,
+        # supaya kendaraan yang sama tidak terhitung dua kali hanya karena
+        # sumber deteksinya berpindah (fallback -> dapat ID, atau ID -> sempat hilang -> fallback)
+        recent_counted       = []  # isi: (cx, cy, label, frame_id)
         log(cctv_id, "info", f"Resumed today totals: {total_counts}")
-        FALLBACK_DIST_TH    = 50   # pixel — jarak minimum antar centroid beda kendaraan
-        FALLBACK_EXPIRE     = 15   # frame — centroid lama dihapus setelah N frame
+        DEDUP_DIST_TH        = 50   # pixel — jarak minimum antar centroid beda kendaraan
+        DEDUP_EXPIRE         = 15   # frame — entri lama dihapus setelah N frame
 
         pipe_out = subprocess.Popen(ffmpeg_out, stdin=subprocess.PIPE)
 
@@ -331,8 +337,9 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 last_boxes = []
 
                 id_tracker         = {}
+                pending_hits       = {}   # track_id baru yang belum lolos konfirmasi
                 interval_counts    = {k: 0 for k in VEHICLE_CLASSES}
-                fallback_centroids = []
+                recent_counted     = []
                 last_count_time    = time.time()
 
                 while True:
@@ -357,6 +364,12 @@ def run_cctv(cctv_id, hls_url, shared_counts):
 
                         last_boxes.clear()
 
+                        # Bersihkan entri dedup yang sudah kadaluarsa (sekali per frame deteksi)
+                        recent_counted[:] = [
+                            c for c in recent_counted
+                            if (frame_id - c[3]) <= DEDUP_EXPIRE
+                        ]
+
                         for box in results.boxes:
                             cls_id = int(box.cls[0])
                             label  = model.names[cls_id]
@@ -367,6 +380,17 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                             conf = float(box.conf[0])
                             tid = int(box.id[0]) if box.id is not None else None
                             last_boxes.append((x1, y1, x2, y2, label, conf, tid))
+
+                            cx = (x1 + x2) // 2
+                            cy = (y1 + y2) // 2
+
+                            # Cari entri dedup terdekat — ini kunci fix double count:
+                            # dicek lintas sumber (ID maupun fallback), bukan terpisah lagi
+                            match_idx = None
+                            for idx, c in enumerate(recent_counted):
+                                if label == c[2] and abs(cx - c[0]) < DEDUP_DIST_TH and abs(cy - c[1]) < DEDUP_DIST_TH:
+                                    match_idx = idx
+                                    break
 
                             if box.id is not None:
                                 track_id = int(box.id[0])
@@ -381,44 +405,52 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                                     "last_frame": frame_id
                                 }
 
-                                # ID sudah ada = skip, belum ada = hitung 1x
-                                # walau bounding box bergerak tiap frame, ID tetap sama
-                                if unique_key not in counted_ids:
+                                if unique_key in counted_ids:
+                                    # ID ini sudah pernah dihitung → cukup refresh posisi terakhirnya
+                                    if match_idx is not None:
+                                        recent_counted[match_idx] = (cx, cy, label, frame_id)
+                                elif match_idx is not None:
+                                    # Kendaraan ini SEBELUMNYA sudah dihitung lewat fallback
+                                    # (saat itu belum punya ID) → JANGAN dihitung dua kali,
+                                    # cukup daftarkan ID-nya supaya frame berikutnya konsisten
                                     counted_ids.add(unique_key)
-                                    interval_counts[label] += 1
-                                    total_counts[label]    += 1
+                                    recent_counted[match_idx] = (cx, cy, label, frame_id)
                                     log(cctv_id, "info",
-                                        f"NEW vehicle session={session_id} id={track_id} label={label} "
-                                        f"conf={conf:.2f} total={sum(total_counts.values())}")
+                                        f"ID ASSIGNED (skip recount, sudah dihitung via fallback) "
+                                        f"session={session_id} id={track_id} label={label} conf={conf:.2f}")
+                                else:
+                                    # Track baru → JANGAN langsung dihitung.
+                                    # Tunggu track_id ini muncul CONFIRM_FRAMES kali berturut-turut
+                                    # dulu, biar ID hantu akibat oklusi/ID-swap tidak ikut terhitung.
+                                    pending_hits[track_id] = pending_hits.get(track_id, 0) + 1
+
+                                    if pending_hits[track_id] >= CONFIRM_FRAMES:
+                                        counted_ids.add(unique_key)
+                                        interval_counts[label] += 1
+                                        total_counts[label]    += 1
+                                        recent_counted.append((cx, cy, label, frame_id))
+                                        pending_hits.pop(track_id, None)
+                                        log(cctv_id, "info",
+                                            f"NEW vehicle session={session_id} id={track_id} label={label} "
+                                            f"conf={conf:.2f} total={sum(total_counts.values())}")
+                                    else:
+                                        log(cctv_id, "info",
+                                            f"PENDING id={track_id} label={label} "
+                                            f"hit={pending_hits[track_id]}/{CONFIRM_FRAMES}")
                             else:
-                                cx = (x1 + x2) // 2
-                                cy = (y1 + y2) // 2
-
-                                # Hapus centroid lama yang sudah expire
-                                fallback_centroids[:] = [
-                                    c for c in fallback_centroids
-                                    if (frame_id - c[3]) <= FALLBACK_EXPIRE
-                                ]
-
-                                # Cek apakah centroid ini dekat dengan yang sudah ada
-                                is_duplicate = any(
-                                    abs(cx - c[0]) < FALLBACK_DIST_TH and
-                                    abs(cy - c[1]) < FALLBACK_DIST_TH and
-                                    label == c[2]
-                                    for c in fallback_centroids
-                                )
-
-                                if not is_duplicate:
-                                    fallback_centroids.append((cx, cy, label, frame_id))
+                                if match_idx is not None:
+                                    # Sudah pernah dihitung sebelumnya (via ID ATAU fallback) → skip
+                                    recent_counted[match_idx] = (cx, cy, label, frame_id)
+                                    log(cctv_id, "info",
+                                        f"FALLBACK SKIP duplicate centroid label={label} cx={cx} cy={cy}")
+                                else:
+                                    recent_counted.append((cx, cy, label, frame_id))
                                     interval_counts[label] += 1
                                     total_counts[label]    += 1
                                     fallback_count         += 1
                                     log(cctv_id, "warning",
                                         f"FALLBACK (no track_id) label={label} conf={conf:.2f} "
                                         f"cx={cx} cy={cy} total_fallback={fallback_count}")
-                                else:
-                                    log(cctv_id, "info",
-                                        f"FALLBACK SKIP duplicate centroid label={label} cx={cx} cy={cy}")
 
                         expired_ids = [
                             tid for tid, info in id_tracker.items()
@@ -426,6 +458,7 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                         ]
                         for tid in expired_ids:
                             del id_tracker[tid]
+                            pending_hits.pop(tid, None)
 
                         if len(counted_ids) > 10000:
                             # active_keys = semua (session_id, track_id) yang masih aktif di frame ini

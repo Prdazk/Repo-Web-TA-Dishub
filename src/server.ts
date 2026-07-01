@@ -32,6 +32,8 @@ const streams: StreamConfig[] = config.streams || [];
 const ensureDir = (d: string) =>
   !fs.existsSync(d) && fs.mkdirSync(d, { recursive: true });
 
+const activeCleanups: Array<() => void> = [];
+
 function startStream({ id, ws_url, lokasi }: StreamConfig) {
   if (!id || !ws_url) return;
 
@@ -50,6 +52,8 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   let ws: WebSocket | null = null;
   let reconnectTimer: NodeJS.Timeout | null = null;
   let ffmpegRestartTimer: NodeJS.Timeout | null = null;
+  let isDown = false;            // status: sedang gagal connect berturut-turut?
+  let confirmUpTimer: NodeJS.Timeout | null = null; // konfirmasi koneksi benar2 stabil sebelum dianggap pulih
 
   /* ===================== FFMPEG ===================== */
   function startFFmpeg() {
@@ -110,7 +114,7 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
 
     // ✅ Auto restart kalau FFmpeg mati
     ffmpeg.on("exit", (code) => {
-    console.warn(`⚠ FFmpeg exit (${id}) code=${code}, restart dalam 5 detik...`);
+    console.warn(`⚠ FFmpeg exit (${id}) code=${code}, restart dalam 2 detik...`);
     ffmpeg = null;
     if (ffmpegRestartTimer) return;
     ffmpegRestartTimer = setTimeout(() => {
@@ -121,44 +125,65 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   }
 
   /* ===================== WS RECONNECT ===================== */
+  let downLogTimer: NodeJS.Timeout | null = null;
+  const DOWN_GRACE_MS = 10_000; // toleransi sebelum dianggap benar2 mati
+
   function connectWS() {
     if (ws && ws.readyState === WebSocket.OPEN) return;
 
-    console.log(`🔌 WS connecting (${id})`);
     ws = new WebSocket(ws_url, { perMessageDeflate: false });
 
     ws.on("open", () => {
-      console.log(`✅ WS connected (${id})`);
+      // Reconnect berhasil sebelum sempat dianggap "mati" -> batalkan log down, diam saja
+      if (downLogTimer) { clearTimeout(downLogTimer); downLogTimer = null; }
+
+      if (confirmUpTimer) clearTimeout(confirmUpTimer);
+      confirmUpTimer = setTimeout(() => {
+        confirmUpTimer = null;
+        if (isDown) {
+          console.log(`✅ WS pulih kembali (${id})`);
+        }
+        isDown = false;
+      }, 5000);
     });
 
     ws.on("message", (d) => {
       try {
-        // Cek ffmpeg masih hidup sebelum kirim data
         if (ffmpeg && ffmpeg.stdin.writable) {
           ffmpeg.stdin.write(d as Buffer);
         }
-      } catch {
-        // skip frame
-      }
+      } catch {}
     });
 
     ws.on("close", () => {
-      console.warn(`⚠ WS closed (${id})`);
+      if (confirmUpTimer) { clearTimeout(confirmUpTimer); confirmUpTimer = null; }
+      scheduleDownLog();
       scheduleReconnect();
     });
 
-    ws.on("error", (err) => {
-      console.warn(`⚠ WS error (${id}): ${err.message}`);
+    ws.on("error", () => {
+      if (confirmUpTimer) { clearTimeout(confirmUpTimer); confirmUpTimer = null; }
+      scheduleDownLog();
       scheduleReconnect();
     });
+  }
+
+  function scheduleDownLog() {
+    // Sudah tercatat down, atau sudah dijadwalkan -> tidak perlu ulang
+    if (isDown || downLogTimer) return;
+    downLogTimer = setTimeout(() => {
+      downLogTimer = null;
+      isDown = true;
+      console.warn(`⚠ WS terputus (${id}), reconnect otomatis di background...`);
+    }, DOWN_GRACE_MS);
   }
 
   function scheduleReconnect() {
     if (reconnectTimer) return;
     reconnectTimer = setTimeout(() => {
-    reconnectTimer = null;
-    connectWS();
-  }, 1000);
+      reconnectTimer = null;
+      connectWS();
+    }, 1000);
   }
 
   // ✅ Start keduanya
@@ -166,7 +191,7 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   connectWS();
 
   /* ===================== THUMB ===================== */
-  setInterval(() => {
+  const thumbInterval = setInterval(() => {
     if (!fs.existsSync(playlist)) return;
     spawn("ffmpeg", [
       "-loglevel", "error",
@@ -177,7 +202,29 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
       thumb
     ]);
   }, 30_000);
+  
+  /* ===================== CLEANUP ===================== */
+  activeCleanups.push(() => {
+    console.log(`🛑 Stopping stream (${id})`);
+    clearInterval(thumbInterval);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (ffmpegRestartTimer) clearTimeout(ffmpegRestartTimer);
+    if (confirmUpTimer) clearTimeout(confirmUpTimer);
+    if (downLogTimer) clearTimeout(downLogTimer); // tambahan
+    try { ws?.removeAllListeners(); ws?.close(); } catch {}
+    try { ffmpeg?.stdin.destroy(); ffmpeg?.kill("SIGKILL"); } catch {}
+  });
 }
+
 /* ===================== START ===================== */
 streams.forEach(startStream);
+
+function shutdown(signal: string) {
+  console.log(`\n🛑 Menerima ${signal}, mematikan semua stream...`);
+  activeCleanups.forEach((cleanup) => cleanup());
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
