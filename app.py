@@ -25,7 +25,7 @@ CONF_TH = 0.45
 FRAME_SKIP = 4
 COUNT_INTERVAL = 10
 
-ID_EXPIRE_FRAMES = 15
+ID_EXPIRE_FRAMES = 15 * FRAME_SKIP
 MAX_PROC = 2
 
 # Berapa kali track_id baru harus muncul berturut-turut sebelum

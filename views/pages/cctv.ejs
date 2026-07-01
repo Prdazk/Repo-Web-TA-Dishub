@@ -647,15 +647,16 @@
                 const totalSemua = arr.reduce((s, x) => s + x.total, 0);
                 const rataRata = Math.round(totalSemua / arr.length);
 
-                // cari jam median — jam di posisi tengah distribusi
-                const sorted = [...arr].sort((a, b) => a.total - b.total);
-                const jamRata = sorted[Math.floor(sorted.length / 2)];
+                // cari jam yang nilainya paling dekat dengan rata-rata
+                const jamRata = arr.reduce((closest, cur) =>
+                    Math.abs(cur.total - rataRata) < Math.abs(closest.total - rataRata) ? cur : closest
+                );
 
                 return {
                     id,
                     tertinggi: arr[0],
                     terendah: arr[arr.length - 1],
-                    rata: { jam: jamRata.jam, nilai: rataRata }
+                    rata: { jam: jamRata.jam, nilai: jamRata.total }
                 }
             }).filter(Boolean);
 
