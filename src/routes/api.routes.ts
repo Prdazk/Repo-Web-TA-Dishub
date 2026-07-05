@@ -215,7 +215,6 @@ router.get("/db/list", (req: any, res: any) => {
           car: item.car,
           bus: item.bus,
           truck: item.truck,
-          ws_url: info?.ws_url || null,
         };
       });
 
@@ -250,7 +249,6 @@ router.get("/db/list", (req: any, res: any) => {
         car: item.car,
         bus: item.bus,
         truck: item.truck,
-        ws_url: info?.ws_url || null,
       };
     });
 
