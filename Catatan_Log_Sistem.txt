@@ -1,78 +1,21 @@
-CATATAN PEMERIKSAAN LOG SISTEM
+Kendaraan terdeteksi tanpa track_id (fallback)
+Select-String -Path logs/system.log -Pattern "2026-07-01.*FALLBACK"
 
-PENJELASAN
+Kendaraan yang di-skip karena sudah dihitung (hindari double count)
+Select-String -Path logs/system.log -Pattern "2026-07-01.*SKIP"
 
-Aplikasi berjalan secara real-time sehingga terminal dan file
-logs/system.log akan terus bertambah selama sistem masih aktif. Oleh
-karena itu, saat pengujian atau sidang tidak perlu memeriksa seluruh isi
-log yang jumlahnya bisa mencapai ribuan baris.
+Filter per CCTV tertentu + tanggal
+Select-String -Path logs/system.log -Pattern "2026-07-01.*\[cctv_1\]"
 
-Cara yang lebih mudah adalah memfilter log berdasarkan tanggal pengujian
-atau kata kunci tertentu. Dengan cara ini hanya informasi yang
-dibutuhkan yang akan ditampilkan sehingga lebih mudah dijelaskan kepada
-dosen.
+Semua error/warning (misal stream putus)
+Select-String -Path logs/system.log -Pattern "2026-07-01.*(ERROR|WARNING)"
 
-====================================================
+Simpan hasil filter ke file baru (buat lampiran sidang)
+Select-String -Path logs/system.log -Pattern "2026-07-01.*NEW vehicle" | Out-File hasil_new_vehicle.txt
 
-1.  Masuk ke folder project
-
-cd “D:Dishub TA”
-
-====================================================
-
-2.  Menampilkan log pada tanggal pengujian
-
-Contoh jika pengujian dilakukan pada tanggal 2026-07-01:
-
-Select-String -Path ..log -Pattern “2026-07-01”
-
-Keterangan: Perintah ini hanya menampilkan log pada tanggal tersebut
-sehingga tidak perlu membaca seluruh isi file log.
-
-====================================================
-
-3.  Menampilkan kendaraan yang berhasil dihitung
-
-Select-String -Path ..log -Pattern “2026-07-01.*NEW vehicle”
-
-Keterangan: NEW vehicle menunjukkan sistem berhasil mendeteksi dan
-menghitung kendaraan baru.
-
-====================================================
-
-4.  Menampilkan data yang berhasil disimpan ke database
-
-Select-String -Path ..log -Pattern “2026-07-01.*Saved:”
-
-Keterangan: Saved menunjukkan hasil perhitungan telah berhasil disimpan
-ke database.
-
-====================================================
-
-5.  Menampilkan kendaraan yang sedang divalidasi
-
-Select-String -Path ..log -Pattern “2026-07-01.*PENDING”
-
-Keterangan: PENDING menunjukkan kendaraan masih dalam proses validasi
-sehingga belum dihitung.
-
-====================================================
-
-PENJELASAN SAAT SIDANG
-
-Jika dosen bertanya: “Bagaimana membuktikan kendaraan benar-benar
-dihitung?”
-
-Jawaban:
-
--   Saya mencari log berdasarkan tanggal pengujian agar hanya data pada
-    hari tersebut yang ditampilkan.
--   Log NEW vehicle membuktikan kendaraan baru berhasil dihitung.
--   Log Saved membuktikan hasil perhitungan berhasil disimpan ke
-    database.
--   Log PENDING menunjukkan proses validasi sebelum kendaraan dihitung.
--   Seluruh proses dapat ditelusuri melalui file logs/system.log sebagai
-    audit trail sistem.
-
-Catatan: Ganti tanggal 2026-07-01 sesuai tanggal pengujian yang
-sebenarnya.
+cek library 
+pip list                          # lihat semua library + versi
+pip freeze                        # format standar requirements.txt
+pip freeze > requirements.txt     # simpan ke file (lampiran TA)
+pip show ultralytics              # cek detail 1 library
+python --version                  # cek versi python

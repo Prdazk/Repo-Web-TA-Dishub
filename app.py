@@ -34,7 +34,7 @@ MAX_PROC = 2
 CONFIRM_FRAMES = 2
 VEHICLE_CLASSES = {"car", "motorcycle", "bus", "truck"}
 
-USE_PREFIX_CCTV = True
+USE_PREFIX_CCTV = True  
 # =========================================
 
 db_lock = Lock()
@@ -122,6 +122,35 @@ def draw_modern_box(frame, x1, y1, x2, y2, label, conf, track_id=None):
     cv2.putText(frame, text_id,
                 (x1 + padding, bg_y1 + th1 + th2 + padding * 2),
                 font, 0.38, (200, 230, 255), 1, cv2.LINE_AA)
+
+# def draw_modern_box(frame, x1, y1, x2, y2, label, conf, track_id=None):
+#     box_color, bg_color = COLORS.get(label, ((200, 200, 200), (120, 120, 120)))
+#     font = cv2.FONT_HERSHEY_SIMPLEX
+#     padding = 4
+
+#     cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
+
+#     # Baris label + confidence (satu-satunya yang ditampilkan)
+#     text_main = f"{label} {conf:.2f}"
+#     (tw1, th1), _ = cv2.getTextSize(text_main, font, 0.45, 1)
+
+#     box_w   = tw1 + padding * 2
+#     total_h = th1 + padding * 2
+
+#     bg_y1 = y1 - total_h
+#     bg_y2 = y1
+#     if bg_y1 < 0:
+#         bg_y1 = y1
+#         bg_y2 = y1 + total_h
+
+#     cv2.rectangle(frame, (x1, bg_y1), (x1 + box_w, bg_y2), bg_color, -1)
+#     cv2.putText(frame, text_main,
+#                 (x1 + padding, bg_y2 - padding),
+#                 font, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
+
+#     # track_id sengaja tidak digambar, tapi tetap diterima sebagai parameter
+#     # supaya pemanggil di run_cctv() tidak perlu diubah — tracking/counting tetap normal
+#     _ = track_id
 
 def create_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -521,7 +550,7 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 log(cctv_id, "info", f"Session naik → session_id={session_id}")
                 # ──────────────────────────────────────────────────────────
 
-                # ✅ pipe_out JANGAN di-kill saat reconnect input
+                # pipe_out JANGAN di-kill saat reconnect input
                 # biarkan tetap hidup supaya segment counter tidak reset
                 time.sleep(3)
 
