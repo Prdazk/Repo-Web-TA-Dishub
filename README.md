@@ -1,7 +1,7 @@
 # CCTV DETEKSI ARUS LALU LINTAS (YOLO)
 Sistem monitoring Arus Lalu lintas berbasis computer vision menggunakan Yolov8 untuk mendeteksi, melacak, dan menghitung kendaraan secara real-time melalui cctv. sistem ini di lengkapi Dashboard monitoring berbasis web serta menyimpan data menggunakan SQlite 
 
-> Screenshot aplikasi akan ditambahkan di sini.
+![Dashboard](assets/Dashboard.png.png)
 
 ## Install & Dependencies
 
