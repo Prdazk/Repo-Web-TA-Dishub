@@ -112,7 +112,6 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
       }
     });
 
-    // ✅ Auto restart kalau FFmpeg mati
     ffmpeg.on("exit", (code) => {
     console.warn(`⚠ FFmpeg exit (${id}) code=${code}, restart dalam 2 detik...`);
     ffmpeg = null;
@@ -169,7 +168,6 @@ function startStream({ id, ws_url, lokasi }: StreamConfig) {
   }
 
   function scheduleDownLog() {
-    // Sudah tercatat down, atau sudah dijadwalkan -> tidak perlu ulang
     if (isDown || downLogTimer) return;
     downLogTimer = setTimeout(() => {
       downLogTimer = null;

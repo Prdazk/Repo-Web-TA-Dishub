@@ -144,8 +144,6 @@
                         </div>
                     </div>
                 </div>
-
-            <!-- Modal Export PDF -->
                 <div id="modalPDF" onclick="if(event.target===this)closePDFModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                          <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;padding:32px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
                         <h3 style="margin:0 0 8px;color:#1e3a5f;font-size:18px;"><i class="fa fa-file-pdf-o"></i> Export PDF</h3>
@@ -158,8 +156,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Modal Tidak Ada Data -->
                 <div id="modalTidakAdaData" onclick="if(event.target===this)closeModalTidakAdaData()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center;">
                     <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;padding:36px 32px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center;">
                         <div style="font-size:36px;margin-bottom:12px;color:#9ca3af;"><i class="fa fa-inbox"></i></div>
@@ -168,8 +164,6 @@
                         <button onclick="closeModalTidakAdaData()" style="padding:11px 32px;border:none;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Tutup</button>
                     </div>
                 </div>
-
-                <!-- Modal Filter Tanggal -->
                 <div id="modalFilter" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
                     <div style="background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
@@ -556,7 +550,6 @@
                 });
 
                 renderPagination(totalPage);
-
                 const now = new Date();
                 const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
@@ -576,7 +569,6 @@
 
                 const snap = await fetch(`/api/db/dashboard-snapshot?${summaryParams.toString()}`).then(r => r.json());
 
-               // per lokasi
                 const perLokasiHariIni = {};
                 (snap.perLokasi || []).forEach(row => {
                     perLokasiHariIni[row.id] = row.total;
@@ -586,7 +578,6 @@
                 let jamArusData = snap.jamArus || [];
                 let jamLabel = "hari ini";
 
-                // fallback kemarin
                 const totalKendaraanHariIni = snap.total_kendaraan ?? 0;
 
                 if (totalKendaraanHariIni === 0) {
@@ -606,7 +597,6 @@
                     }
                 }
 
-               // label fallback
                 ["labelJamTertinggi","labelJamMenengah","labelJamTerendah"].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = jamLabel === "data kemarin" ? "* Menampilkan data kemarin" : "";

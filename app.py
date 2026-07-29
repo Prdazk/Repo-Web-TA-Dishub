@@ -260,8 +260,6 @@ def update_traffic_db(cctv_id, counts):
             if conn:
                 conn.close()
 
-
-# ========= CCTV PROCESS =========
 def run_cctv(cctv_id, hls_url, shared_counts):
     cctv_id = normalize_cctv_id(cctv_id)
 
@@ -531,7 +529,6 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                 log(cctv_id, "error", traceback.format_exc())
                 log(cctv_id, "warning", "RECONNECTING in 3 seconds...")
 
-                # Simpan sisa interval_counts yang belum sempat disimpan ke DB
                 if any(v > 0 for v in interval_counts.values()):
                     update_traffic_db(cctv_id, interval_counts)
                     log(cctv_id, "warning", f"Flushed interval on disconnect: {interval_counts}")
@@ -540,18 +537,9 @@ def run_cctv(cctv_id, hls_url, shared_counts):
                     pipe_in.kill()
                     pipe_in.wait()
                 except (NameError, Exception):
-                    pass  # pipe_in belum terdefinisi atau sudah mati
-
-                # ── NAIKKAN SESSION ID ─────────────────────────────────────
-                # ByteTrack akan reset ID dari 1 lagi setelah reconnect.
-                # Dengan menaikkan session_id, semua ID lama otomatis
-                # berbeda namespace → tidak ada collision, tidak ada miss count
+                    pass  
                 session_id += 1
                 log(cctv_id, "info", f"Session naik → session_id={session_id}")
-                # ──────────────────────────────────────────────────────────
-
-                # pipe_out JANGAN di-kill saat reconnect input
-                # biarkan tetap hidup supaya segment counter tidak reset
                 time.sleep(3)
 
     except Exception as e:
