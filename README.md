@@ -47,13 +47,27 @@ Kendaraan yang berhasil terdeteksi kemudian dilacak menggunakan ByteTrack. Ketik
 
 Data hasil pemantauan kemudian disimpan ke SQLite dan ditampilkan pada dashboard web.
 
-![Dashboard](assets/Dashboard.png.png)
+## Tampilan Sistem
 
-![Deteksi Kendaraan](assets/Deteksi-Kendaraan.jpg.jpg)
+### Dashboard
 
-![Data Kendaraan](assets/Data-Kendaraan.jpg.jpg)
+![Dashboard](assets/dashboard.png)
 
-![Riwayat](assets/Riwayat.jpg.jpg)
+### Live CCTV
+
+![Live CCTV](assets/live.png)
+
+### Deteksi Kendaraan
+
+![Deteksi Kendaraan](assets/live2.png)
+
+### Data Kendaraan
+
+![Data Kendaraan](assets/data-kendaraan.png)
+
+### Riwayat Arus Lalu Lintas
+
+![Riwayat](assets/riwayat.png)
 
 
 
