@@ -47,23 +47,6 @@ Kendaraan yang berhasil terdeteksi kemudian dilacak menggunakan ByteTrack. Ketik
 
 Data hasil pemantauan kemudian disimpan ke SQLite dan ditampilkan pada dashboard web.
 
-```text
-CCTV
-  ↓
-Video Stream
-  ↓
-YOLOv8
-  ↓
-Deteksi Kendaraan
-  ↓
-ByteTrack
-  ↓
-Tracking & Counting
-  ↓
-SQLite
-  ↓
-Dashboard Web
-
 ![Dashboard](assets/Dashboard.png)
 
 
