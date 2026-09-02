@@ -64,7 +64,8 @@ SQLite
   ↓
 Dashboard Web
 
-![Dashboard](assets/Dashboard.png.png)
+![Dashboard](assets/Dashboard.png)
+
 
 ## Install & Dependencies
 
